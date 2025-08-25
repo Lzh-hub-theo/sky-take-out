@@ -89,5 +89,14 @@ public class EmployeeController {
         return Result.success();
     }
 
+    @GetMapping("/page")
+    @ApiOperation("分页查询员工信息")
+    public Result employeePageQuery(@RequestParam(name="name",required = false)String name,@RequestParam(name="page")Integer page,@RequestParam(name="pageSize")Integer pageSize){
+        log.info("分页查询数据:{},{},{}", name,page,pageSize);
+        PageResult empList = employeeService.pageQuery(name, page, pageSize);
+        return Result.success(empList);
+    }
+
+
 
 }
