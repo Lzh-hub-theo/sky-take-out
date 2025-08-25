@@ -89,6 +89,13 @@ public class EmployeeController {
         return Result.success();
     }
 
+    /**
+     * 分页查询员工
+     * @param name
+     * @param page
+     * @param pageSize
+     * @return
+     */
     @GetMapping("/page")
     @ApiOperation("分页查询员工信息")
     public Result employeePageQuery(@RequestParam(name="name",required = false)String name,@RequestParam(name="page")Integer page,@RequestParam(name="pageSize")Integer pageSize){
@@ -97,6 +104,18 @@ public class EmployeeController {
         return Result.success(empList);
     }
 
-
+    /**
+     * 启用禁用员工
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("启用禁用员工")
+    public Result modifyStatus(@PathVariable Integer status,@RequestParam Integer id){
+        log.info("状态码:{},员工id:{}",status,id);
+        employeeService.modifyStatus(status,id);
+        return Result.success();
+    }
 
 }

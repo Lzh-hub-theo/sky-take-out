@@ -94,5 +94,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         return pageResult;
     }
 
+    @Override
+    public void modifyStatus(Integer status, Integer id) {
+        employeeMapper.modifyStatus(status,id);
+    }
+
 
 }

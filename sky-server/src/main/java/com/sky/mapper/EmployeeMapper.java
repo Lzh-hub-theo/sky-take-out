@@ -1,10 +1,7 @@
 package com.sky.mapper;
 
 import com.sky.entity.Employee;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -28,4 +25,7 @@ public interface EmployeeMapper {
 
     @Select("select count(*) from employee limit #{pos},#{pageSize}")
     Long count(Integer pos, Integer pageSize);
+
+    @Update("update employee set status = #{status} where id = #{id}")
+    void modifyStatus(Integer status, Integer id);
 }

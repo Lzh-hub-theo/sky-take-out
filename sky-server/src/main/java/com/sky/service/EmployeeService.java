@@ -19,4 +19,6 @@ public interface EmployeeService {
     public void save(EmployeeDTO employeeDTO);
 
     public PageResult pageQuery(String name, Integer page, Integer pageSize);
+
+    void modifyStatus(Integer status, Integer id);
 }
