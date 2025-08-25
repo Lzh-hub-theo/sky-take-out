@@ -11,6 +11,7 @@ import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -77,6 +79,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         emp.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.save(emp);
+    }
+
+    @Override
+    public PageResult pageQuery(String name, Integer page, Integer pageSize) {
+        PageResult pageResult = new PageResult();
+
+        Long cnt=employeeMapper.count(pageSize * (page - 1), pageSize);
+        List<Employee> empList = employeeMapper.pageQuery(pageSize * (page - 1), pageSize);
+
+        pageResult.setTotal(cnt);
+        pageResult.setRecords(empList);
+
+        return pageResult;
     }
 
 }

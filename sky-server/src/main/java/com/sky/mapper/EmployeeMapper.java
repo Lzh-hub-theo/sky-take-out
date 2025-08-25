@@ -3,7 +3,10 @@ package com.sky.mapper;
 import com.sky.entity.Employee;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 @Mapper
 public interface EmployeeMapper {
@@ -20,4 +23,9 @@ public interface EmployeeMapper {
             "values (#{name},#{username},#{password},#{phone},#{sex},#{idNumber},#{status},#{createTime},#{updateTime},#{createUser},#{updateUser})")
     void save(Employee emp);
 
+    @Select("select * from employee limit #{pos},#{pageSize}")
+    List<Employee> pageQuery(@Param("pos") Integer pos, @Param("pageSize") Integer pageSize);
+
+    @Select("select count(*) from employee limit #{pos},#{pageSize}")
+    Long count(Integer pos, Integer pageSize);
 }
