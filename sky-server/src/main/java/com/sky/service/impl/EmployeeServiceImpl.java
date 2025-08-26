@@ -88,7 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         PageResult pageResult = new PageResult();
 
         Long cnt=employeeMapper.count(pageSize * (page - 1), pageSize);
-        List<Employee> empList = employeeMapper.pageQuery(pageSize * (page - 1), pageSize);
+        List<Employee> empList = employeeMapper.pageQuery(name,pageSize * (page - 1), pageSize);
 
         pageResult.setTotal(cnt);
         pageResult.setRecords(empList);

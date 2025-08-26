@@ -21,8 +21,8 @@ public interface EmployeeMapper {
             "values (#{name},#{username},#{password},#{phone},#{sex},#{idNumber},#{status},#{createTime},#{updateTime},#{createUser},#{updateUser})")
     void save(Employee emp);
 
-    @Select("select * from employee limit #{pos},#{pageSize}")
-    List<Employee> pageQuery(@Param("pos") Integer pos, @Param("pageSize") Integer pageSize);
+    //@Select("select * from employee limit #{pos},#{pageSize}")
+    List<Employee> pageQuery(String name,Integer pos,Integer pageSize);
 
     @Select("select count(*) from employee limit #{pos},#{pageSize}")
     Long count(Integer pos, Integer pageSize);
