@@ -6,12 +6,14 @@ import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,12 +97,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void modifyStatus(Integer status, Integer id) {
+    public void modifyStatus(Integer status, Long id) {
         employeeMapper.modifyStatus(status,id);
     }
 
     @Override
-    public Employee selectById(Integer id) {
+    public Employee selectById(Long id) {
         Employee emp = employeeMapper.selectById(id);
         return emp;
     }
@@ -112,6 +114,26 @@ public class EmployeeServiceImpl implements EmployeeService {
         emp.setUpdateTime(LocalDateTime.now());
         emp.setUpdateUser(BaseContext.getCurrentId());
         employeeMapper.modifyInfo(emp);
+    }
+
+    @Override
+    public void modifyPassword(PasswordEditDTO passwordEditDTO) {
+        Employee emp = employeeMapper.selectById(passwordEditDTO.getEmpId());
+
+        String oldPasswordAfterDigest = DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes());
+
+        if(emp.getPassword().equals(oldPasswordAfterDigest)){
+
+            String newPasswordAfterDigest = DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes());
+            emp.setPassword(newPasswordAfterDigest);
+            emp.setUpdateTime(LocalDateTime.now());
+            emp.setUpdateUser(BaseContext.getCurrentId());
+
+            employeeMapper.modifyPassword(emp);
+        }
+        else{
+            throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
+        }
     }
 
 

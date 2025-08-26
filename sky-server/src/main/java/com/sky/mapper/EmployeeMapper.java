@@ -1,5 +1,6 @@
 package com.sky.mapper;
 
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import org.apache.ibatis.annotations.*;
 
@@ -27,11 +28,14 @@ public interface EmployeeMapper {
     Long count(Integer pos, Integer pageSize);
 
     @Update("update employee set status = #{status} where id = #{id}")
-    void modifyStatus(Integer status, Integer id);
+    void modifyStatus(Integer status, Long id);
 
     @Select("select * from employee where id = #{id}")
-    Employee selectById(Integer id);
+    Employee selectById(Long id);
 
     @Update("update employee set username=#{username},name=#{name},phone=#{phone},sex=#{sex},id_number=#{idNumber},update_time=#{updateTime},update_user=#{updateUser} where id=#{id}")
     void modifyInfo(Employee emp);
+
+    @Update("update employee set password=#{password},update_time=#{updateTime},update_user=#{updateUser} where id=#{id}")
+    void modifyPassword(Employee emp);
 }
