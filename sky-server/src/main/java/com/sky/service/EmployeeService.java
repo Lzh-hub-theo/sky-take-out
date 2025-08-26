@@ -21,4 +21,8 @@ public interface EmployeeService {
     public PageResult pageQuery(String name, Integer page, Integer pageSize);
 
     void modifyStatus(Integer status, Integer id);
+
+    Employee selectById(Integer id);
+
+    void modifyInfo(EmployeeDTO employeeDTO);
 }
