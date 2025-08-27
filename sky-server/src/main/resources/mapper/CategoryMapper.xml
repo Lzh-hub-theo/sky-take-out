@@ -12,6 +12,7 @@
                     and type = #{type}
                 </if>
             </where>
+        order by sort asc, update_time desc
     </select>
 
     <insert id="save">
