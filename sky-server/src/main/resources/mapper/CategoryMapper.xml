@@ -13,4 +13,13 @@
                 </if>
             </where>
     </select>
+
+    <insert id="save">
+        insert into category(
+                 <if test="id != null">id,</if>
+                 type, name, sort, status, create_time, update_time, create_user, update_user)
+        values (
+                 <if test="id != null">#{id},</if>
+                 #{type},#{name},#{sort},#{status},#{createTime},#{updateTime},#{createUser},#{updateUser})
+    </insert>
 </mapper>

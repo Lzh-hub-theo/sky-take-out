@@ -5,7 +5,9 @@
     <select id="pageQuery" resultType="com.sky.entity.Employee">
         select * from employee
          <where>
-             name like concat('%',#{name},'%')
+            <if test="name != null">
+                name like concat('%',#{name},'%')
+            </if>
          </where>
         limit #{pos},#{pageSize};
     </select>

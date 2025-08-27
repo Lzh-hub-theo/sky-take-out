@@ -2,13 +2,18 @@ package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.CategoryDTO;
 import com.sky.entity.Category;
 import com.sky.mapper.CategoryMapper;
 import com.sky.result.PageResult;
 import com.sky.service.CategoryService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,5 +33,40 @@ public class CategoryServiceImpl implements CategoryService {
         pageResult.setRecords(p.getResult());
 
         return pageResult;
+    }
+
+    @Override
+    public void save(CategoryDTO categoryDTO) {
+        Category category=new Category();
+        BeanUtils.copyProperties(categoryDTO,category);
+
+        category.setStatus(StatusConstant.ENABLE);
+        category.setCreateTime(LocalDateTime.now());
+        category.setCreateUser(BaseContext.getCurrentId());
+        category.setUpdateTime(LocalDateTime.now());
+        category.setUpdateUser(BaseContext.getCurrentId());
+
+        categoryMapper.save(category);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        categoryMapper.deleteById(id);
+    }
+
+    @Override
+    public void modifyStatus(Long id, Integer status) {
+        categoryMapper.modifyStatus(id,status);
+    }
+
+    @Override
+    public List<Category> queryByType(Integer type) {
+        List<Category> categories = categoryMapper.queryByType(type);
+        return categories;
+    }
+
+    @Override
+    public void modifyInfo(CategoryDTO categoryDTO) {
+        categoryMapper.modifyInfo(categoryDTO);
     }
 }
