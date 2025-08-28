@@ -73,12 +73,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         emp.setStatus(StatusConstant.ENABLE);
         emp.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
 
-        emp.setCreateTime(LocalDateTime.now());
+        /*emp.setCreateTime(LocalDateTime.now());
         emp.setUpdateTime(LocalDateTime.now());
 
         //获取创建和更新该员工的人的ID
         emp.setCreateUser(BaseContext.getCurrentId());
-        emp.setUpdateUser(BaseContext.getCurrentId());
+        emp.setUpdateUser(BaseContext.getCurrentId());*/
 
         employeeMapper.save(emp);
     }
@@ -98,7 +98,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void modifyStatus(Integer status, Long id) {
-        employeeMapper.modifyStatus(status,id);
+        Employee emp=new Employee();
+        emp.setId(id);
+        emp.setStatus(status);
+        employeeMapper.modifyStatus(emp);
     }
 
     @Override
@@ -111,8 +114,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void modifyInfo(EmployeeDTO employeeDTO) {
         Employee emp=new Employee();
         BeanUtils.copyProperties(employeeDTO,emp);
-        emp.setUpdateTime(LocalDateTime.now());
-        emp.setUpdateUser(BaseContext.getCurrentId());
+        /*emp.setUpdateTime(LocalDateTime.now());
+        emp.setUpdateUser(BaseContext.getCurrentId());*/
         employeeMapper.modifyInfo(emp);
     }
 
@@ -126,8 +129,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
             String newPasswordAfterDigest = DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes());
             emp.setPassword(newPasswordAfterDigest);
-            emp.setUpdateTime(LocalDateTime.now());
-            emp.setUpdateUser(BaseContext.getCurrentId());
+            /*emp.setUpdateTime(LocalDateTime.now());
+            emp.setUpdateUser(BaseContext.getCurrentId());*/
 
             employeeMapper.modifyPassword(emp);
         }
