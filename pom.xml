@@ -31,9 +31,16 @@
         <jaxb-api>2.3.1</jaxb-api>
         <poi>3.16</poi>
         <knife4j>3.0.2</knife4j>
+        <qiniu-cloud>7.19.0</qiniu-cloud>
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.qiniu</groupId>
+                <artifactId>qiniu-java-sdk</artifactId>
+                <version>${qiniu-cloud}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
                 <artifactId>mybatis-spring-boot-starter</artifactId>
