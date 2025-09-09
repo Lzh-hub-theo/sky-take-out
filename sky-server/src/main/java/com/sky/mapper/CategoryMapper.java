@@ -32,4 +32,7 @@ public interface CategoryMapper {
     @AutoFillAnno(OperationType.UPDATE)
     @Update("update category set name = #{name},sort = #{sort},type = #{type},update_time=#{updateTime},update_user=#{updateUser} where id = #{id}")
     void modifyInfo(Category category);
+
+    @Select("select name from category where id = #{id}")
+    String queryNameById(Long id);
 }
