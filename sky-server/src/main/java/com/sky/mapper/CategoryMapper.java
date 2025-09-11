@@ -26,7 +26,7 @@ public interface CategoryMapper {
     @Update("update category set status = #{status},update_time=#{updateTime},update_user=#{updateUser} where id = #{id}")
     void modifyStatus(Category category);
 
-    @Select("select * from category where type = #{type}")
+    //@Select("select * from category where type = #{type}")
     List<Category> queryByType(Integer type);
 
     @AutoFillAnno(OperationType.UPDATE)

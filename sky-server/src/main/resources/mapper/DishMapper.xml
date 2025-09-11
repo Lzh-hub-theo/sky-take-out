@@ -48,4 +48,8 @@
         </if>
         where id = #{id}
     </update>
+
+    <select id="queryBatchByCategoryId" resultType="com.sky.entity.Dish">
+        select * from dish where category_id=#{categoryId}
+    </select>
 </mapper>

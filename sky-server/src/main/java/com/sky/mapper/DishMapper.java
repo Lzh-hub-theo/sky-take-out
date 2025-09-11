@@ -29,5 +29,7 @@ public interface DishMapper {
 
     @Select("select * from dish where id = #{id}")
     Dish queryById(Long id);
+
+    List<Dish> queryBatchByCategoryId(Long categoryId);
 }
 

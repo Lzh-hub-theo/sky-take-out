@@ -23,4 +23,11 @@
                  <if test="id != null">#{id},</if>
                  #{type},#{name},#{sort},#{status},#{createTime},#{updateTime},#{createUser},#{updateUser})
     </insert>
+
+    <select id="queryByType" resultType="com.sky.entity.Category">
+        select * from category
+        <if test="type!=null">
+            where type = #{type}
+        </if>
+    </select>
 </mapper>
