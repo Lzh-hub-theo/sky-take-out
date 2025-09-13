@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RestController
+@RestController("userSetmealController")
 @RequestMapping("/user/setmeal")
 @Slf4j
 @Api(tags="C端-套餐接口")

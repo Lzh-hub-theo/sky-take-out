@@ -152,10 +152,11 @@ public class DishServiceImpl implements DishService {
     public List<DishVO> queryByCategoryId(Long categoryId) {
         List<DishVO> dishVOs=new ArrayList<>();
 
-        List<Dish> dishes = dishMapper.queryBatchByCategoryId(categoryId);
+        Dish d = Dish.builder().categoryId(categoryId).status(StatusConstant.ENABLE).build();
+        List<Dish> dishes = dishMapper.queryBatchByCategoryId(d);
 
-        DishVO temp=new DishVO();
         for(Dish dish:dishes){
+            DishVO temp=new DishVO();
             List<DishFlavor> flavors = dishFlavorMapper.queryByDishId(dish.getId());
 
             BeanUtils.copyProperties(dish,temp);
@@ -165,5 +166,18 @@ public class DishServiceImpl implements DishService {
         }
 
         return dishVOs;
+    }
+
+    @Override
+    public void modifyStatus(Dish dish) {
+        dishMapper.modify(dish);
+    }
+
+    @Override
+    public List<Dish> listByCategoryId(Long categoryId) {
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        List<Dish> list = dishMapper.queryBatchByCategoryId(dish);
+        return list;
     }
 }
