@@ -4,6 +4,7 @@ import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.vo.OrderStatisticsVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -34,8 +35,19 @@ public interface OrderMapper {
     @Update("update orders set status=#{status}, pay_status=#{payStatus}, checkout_time=#{checkoutTime} where number=#{number}")
     void updateStatus(Orders order);
 
-    List<Orders> list(Orders orders, LocalDateTime begin, LocalDateTime end);
+    List<Orders> list(OrdersPageQueryDTO ordersPageQueryDTO);
 
-    @Select("select couunt(*) from orders where status = #{status}")
+    @Select("select count(*) from orders where status = #{status}")
     Integer statisticsByStatus(Integer status);
+
+    @Select("select * from orders where id=#{orderId}")
+    Orders getById(Long orderId);
+
+    @Update("update orders set status=6 where status = 1 and order_time < #{time}")
+    void updateStatusToCancel(LocalDateTime time);
+
+    @Update("update orders set status = 5 where status = 4")
+    void updateStatusToFinish();
+
+    void updateByStatusAndOrderTimeLT(@Param("orders") Orders orders, @Param("status") Integer status, @Param("time") LocalDateTime time);
 }

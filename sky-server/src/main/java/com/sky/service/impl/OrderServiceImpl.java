@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -12,11 +13,13 @@ import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.utils.BaiduGeoUtils;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.webSocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -45,6 +45,10 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+    @Autowired
+    private BaiduGeoUtils baiduGeoUtils;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     @Override
     @Transactional
@@ -55,6 +59,9 @@ public class OrderServiceImpl implements OrderService {
         if(address == null){
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
+
+        //检查是否超出配送范围
+        baiduGeoUtils.checkOutOfRange(address.getCityName()+address.getDistrictName()+address.getDetail());
 
         Long userId = BaseContext.getCurrentId();
         ShoppingCart shoppingCart = new ShoppingCart();
@@ -113,6 +120,7 @@ public class OrderServiceImpl implements OrderService {
      * @param ordersPaymentDTO
      * @return
      */
+    @Transactional
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
         // 当前登录用户id
         Long userId = BaseContext.getCurrentId();
@@ -153,6 +161,17 @@ public class OrderServiceImpl implements OrderService {
         //清空购物车
         shoppingCartMapper.deleteByUserId(userId);
 
+        //用户完成订单后提醒商家接单
+        order = orderMapper.getByNumber(orderNumber);
+        //type: 1表示来单提醒，2表示用户催单
+        //Map.of("type",1,"orderId",order.getId(),"content","订单号："+orderNumber);
+        Map<Object, Object> objectMap = new HashMap<>();
+        objectMap.put("type",1);
+        objectMap.put("orderId",order.getId());
+        objectMap.put("content","订单号："+orderNumber);
+        String json = JSON.toJSONString(objectMap);
+        webSocketServer.sendMessageToAll(json);
+
         return vo;
     }
 
@@ -183,13 +202,8 @@ public class OrderServiceImpl implements OrderService {
     public PageResult listWithDetails(OrdersPageQueryDTO ordersPageQueryDTO) {
         PageHelper.startPage(ordersPageQueryDTO.getPage(),ordersPageQueryDTO.getPageSize());
 
-        Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersPageQueryDTO,orders);
-        LocalDateTime beginTime = ordersPageQueryDTO.getBeginTime();
-        LocalDateTime endTime = ordersPageQueryDTO.getEndTime();
-
         //查询到部分的单
-        List<Orders> list = orderMapper.list(orders,beginTime,endTime);
+        List<Orders> list = orderMapper.list(ordersPageQueryDTO);
 
         Page<Orders> p = (Page<Orders>)list;
 
@@ -223,14 +237,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderVO getOrderDetail(Long orderId) {
-        Orders order = Orders.builder().id(orderId).build();
-        List<Orders> list = orderMapper.list(order, null, null);
 
-        if(list==null||list.size()==0){
+        Orders orders = orderMapper.getById(orderId);
+
+        if(orders == null){
             throw new NoSuchElementException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        Orders orders = list.get(0);
         List<Long> ids = Arrays.asList(orderId);
         List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderIds(ids);
 
@@ -248,21 +261,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void repitition(Long id) {
-        Orders order = Orders.builder().id(id).build();
-        List<Orders> list = orderMapper.list(order, null, null);
+        Orders orders = orderMapper.getById(id);
 
-        if(list==null||list.size()==0){
+        if(orders == null){
             throw new NoSuchElementException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        Orders orders = list.get(0);
         orders.setOrderTime(LocalDateTime.now());
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
 
         orderMapper.insert(orders);
+
+        List<Long> ids = Arrays.asList(id);
+        List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderIds(ids);
+        orderDetailList.forEach(detail->detail.setOrderId(orders.getId()));
+
+        orderDetailMapper.InsertBatch(orderDetailList);
     }
 
     /**
@@ -327,5 +345,22 @@ public class OrderServiceImpl implements OrderService {
                 .status(Orders.COMPLETED)
                 .build();
         orderMapper.update(order);
+    }
+
+    /**
+     * 向商家端发送消息
+     * @param id
+     */
+    @Override
+    public void remind(Long id) {
+        Orders orders = orderMapper.getById(id);
+
+        Map<Object, Object> map = new HashMap<>();
+        //type: 1,提醒接单 2,催单
+        map.put("type",2);
+        map.put("orderId",id);
+        map.put("content","订单号："+orders.getNumber());
+        String json = JSON.toJSONString(map);
+        webSocketServer.sendMessageToAll(json);
     }
 }

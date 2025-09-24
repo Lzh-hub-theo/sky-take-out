@@ -58,4 +58,6 @@ public interface OrderService {
     void modifyStatusToDelivery(Long id);
 
     void modifyStatusToComplete(Long id);
+
+    void remind(Long id);
 }

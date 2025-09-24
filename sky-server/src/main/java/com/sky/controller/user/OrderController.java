@@ -103,4 +103,17 @@ public class OrderController {
         orderService.repitition(id);
         return Result.success();
     }
+
+    /**
+     * 催单
+     * @param id
+     * @return
+     */
+    @GetMapping("/reminder/{id}")
+    @ApiOperation("催单")
+    public Result remind(@PathVariable Long id){
+        log.info("催单");
+        orderService.remind(id);
+        return Result.success();
+    }
 }

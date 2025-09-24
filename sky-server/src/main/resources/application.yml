@@ -56,3 +56,4 @@ sky:
     secret: ${sky.wechat.secret}
   shop:
     address: ${sky.shop.address}
+    ak: ${sky.shop.ak}
