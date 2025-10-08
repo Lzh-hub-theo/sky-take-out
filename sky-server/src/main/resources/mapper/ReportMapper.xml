@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sky.mapper.ReportMapper">
+    <select id="getTotalOrderCntByBeginAndEnd" resultType="java.util.Map">
+        select cast(checkout_time as date) time,count(*) from orders
+        where cast(checkout_time as date) between #{begin} and #{end} group by time
+    </select>
+
+    <select id="getValidOrderCntByBeginAndEnd" resultType="java.util.Map">
+        select cast(checkout_time as date) time,count(*) from orders
+        where cast(checkout_time as date) between #{begin} and #{end} and status = 5
+        group by time
+    </select>
+
+    <select id="top10" resultType="java.util.Map">
+        select name, count(name) number from orders o left join order_detail od on o.id=od.order_id
+        where status=#{status} and cast(checkout_time as date) between #{begin} and #{end} group by name;
+    </select>
+</mapper>
