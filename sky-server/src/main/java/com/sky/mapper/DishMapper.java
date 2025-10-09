@@ -31,5 +31,8 @@ public interface DishMapper {
     Dish queryById(Long id);
 
     List<Dish> queryBatchByCategoryId(Dish dish);
+
+    @Select("select count(*) from dish where status=#{status}")
+    Integer queryCountByStatus(Integer status);
 }
 

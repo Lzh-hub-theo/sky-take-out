@@ -290,9 +290,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderStatisticsVO statistics() {
-        Integer toBeComfirmed = orderMapper.statisticsByStatus(Orders.TO_BE_CONFIRMED);
-        Integer comfirmed = orderMapper.statisticsByStatus(Orders.CONFIRMED);
-        Integer deliveryInProgress = orderMapper.statisticsByStatus(Orders.DELIVERY_IN_PROGRESS);
+        Integer toBeComfirmed = orderMapper.statisticsByStatus(Map.of("status",Orders.TO_BE_CONFIRMED));
+        Integer comfirmed = orderMapper.statisticsByStatus(Map.of("status",Orders.CONFIRMED));
+        Integer deliveryInProgress = orderMapper.statisticsByStatus(Map.of("status",Orders.DELIVERY_IN_PROGRESS));
 
         OrderStatisticsVO orderStatisticsVO = OrderStatisticsVO.builder()
                 .toBeConfirmed(toBeComfirmed)

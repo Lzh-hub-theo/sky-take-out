@@ -65,6 +65,18 @@
         </where>
     </select>
 
+    <select id="statisticsByStatus" resultType="java.lang.Integer">
+        select count(*) from orders
+        <where>
+            <if test="status!=null">
+                status = #{status}
+            </if>
+            <if test="checkoutTime!=null">
+                 and cast(checkout_time as date) = #{checkoutTime}
+            </if>
+        </where>
+    </select>
+
     <update id="updateByStatusAndOrderTimeLT">
         update orders
         <set>

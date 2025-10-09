@@ -15,6 +15,12 @@ import java.util.Map;
 @Mapper
 public interface ReportMapper {
 
+    /**
+     * 查询指定日期范围内的营业额
+     * @param begin
+     * @param end
+     * @return
+     */
     @Select("select cast(order_time as date) time, sum(amount) turnover from orders " +
             "where cast(order_time as date) between #{begin} and #{end} and status = 5 group by time")
     List<SubtractTurnoverVO> getTurnoversByBeginAndEnd(LocalDate begin, LocalDate end);
