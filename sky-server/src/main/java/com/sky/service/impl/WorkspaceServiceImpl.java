@@ -35,27 +35,28 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     @Transactional
-    public BusinessDataVO businessData() {
-        LocalDate now = LocalDate.now();
-
+    public BusinessDataVO businessData(LocalDate begin,LocalDate end) {
         //有效订单数
-        Integer validOrderNumber = orderMapper.statisticsByStatus(Map.of("status", Orders.COMPLETED, "checkoutTime", now));
+        Integer validOrderNumber = orderMapper.statisticsByStatus(Map.of("status", Orders.COMPLETED, "begin", begin, "end", end));
 
         //订单完成率
         //总订单数
-        Integer totalOrderNumber = orderMapper.statisticsByStatus(Map.of("checkoutTime", now));
+        Integer totalOrderNumber = orderMapper.statisticsByStatus(Map.of("begin", begin, "end", end));
         Double completeRatio;
         if(totalOrderNumber==0) completeRatio=0.0;
         else completeRatio=(double)validOrderNumber/(double)totalOrderNumber;
 
         //新增用户数
-        Integer newUserNumber = userMapper.statisticsByMap(Map.of("createTime",now));
+        Integer newUserNumber = userMapper.statisticsByMap(Map.of("begin", begin, "end", end));
 
         //营业额
-        List<SubtractTurnoverVO> turnoverList = reportMapper.getTurnoversByBeginAndEnd(now, now);
-        Double turnover;
-        if(turnoverList.size()==0) turnover=0.0;
-        else turnover=turnoverList.get(0).getTurnover();
+        List<SubtractTurnoverVO> turnoverList = reportMapper.getTurnoversByBeginAndEnd(begin,end);
+        Double turnover = 0.0;
+        if(turnoverList.size()!=0) {
+            for(SubtractTurnoverVO turnoverVO:turnoverList) {
+                turnover += turnoverVO.getTurnover();
+            }
+        }
 
         //平均客单价
         Double unitPrice;

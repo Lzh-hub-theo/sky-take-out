@@ -71,8 +71,8 @@
             <if test="status!=null">
                 status = #{status}
             </if>
-            <if test="checkoutTime!=null">
-                 and cast(checkout_time as date) = #{checkoutTime}
+            <if test="begin!=null and end !=null">
+                 and cast(checkout_time as date) between #{begin} and #{end}
             </if>
         </where>
     </select>
