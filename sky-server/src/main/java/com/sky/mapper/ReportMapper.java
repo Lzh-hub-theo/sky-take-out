@@ -1,7 +1,6 @@
 package com.sky.mapper;
 
 import com.sky.dto.OrdersReportDTO;
-import com.sky.vo.DishNameAndNumberVO;
 import com.sky.vo.SubtractTurnoverVO;
 import com.sky.vo.SubtractUserVO;
 import org.apache.ibatis.annotations.MapKey;

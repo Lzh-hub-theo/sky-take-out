@@ -1,11 +1,9 @@
 package com.sky.mapper;
 
 import com.sky.annotation.AutoFillAnno;
-import com.sky.dto.CategoryDTO;
 import com.sky.entity.Category;
 import com.sky.enumeration.OperationType;
 import org.apache.ibatis.annotations.*;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

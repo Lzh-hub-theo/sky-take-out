@@ -6,24 +6,19 @@ import com.sky.context.BaseContext;
 import com.sky.enumeration.OperationType;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.aspectj.lang.reflect.SourceLocation;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 @Aspect
 @Component
 @Slf4j
 public class AutoFillAspect {
-
-    // TODO AOP知识点和反射知识点复习
 
     @Pointcut("execution(* com.sky.mapper.*.*(..)) && @annotation(com.sky.annotation.AutoFillAnno)")
     public void autoFillPointCut(){}
@@ -49,7 +44,6 @@ public class AutoFillAspect {
         MethodSignature signature=(MethodSignature)joinPoint.getSignature();//方法签名对象
         AutoFillAnno autoFill = signature.getMethod().getAnnotation(AutoFillAnno.class);//获得方法上的注解对象
         OperationType operationType = autoFill.value();//获取操作类型
-
 
         Object[] args = joinPoint.getArgs();
         if(args == null || args.length == 0){
@@ -85,8 +79,5 @@ public class AutoFillAspect {
                 e.printStackTrace();
             }
         }
-
-
     }
-
 }
