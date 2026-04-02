@@ -56,25 +56,25 @@ public class OrderServiceImpl implements OrderService {
         //增强程序的健壮性：先判断购物车和地址簿是否有相应的数据
         Long addressBookId = ordersSubmitDTO.getAddressBookId();
         AddressBook address = addressBookMapper.getById(addressBookId);
-        if(address == null){
+        if (address == null) {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
 
         //检查是否超出配送范围
-        baiduGeoUtils.checkOutOfRange(address.getCityName()+address.getDistrictName()+address.getDetail());
+        baiduGeoUtils.checkOutOfRange(address.getCityName() + address.getDistrictName() + address.getDetail());
 
         Long userId = BaseContext.getCurrentId();
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.getByShoppingCart(shoppingCart);
 
-        if(shoppingCartList == null || shoppingCartList.size() == 0){
+        if (shoppingCartList == null || shoppingCartList.size() == 0) {
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
 
         //数据插入下单和下单明细表
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersSubmitDTO,orders);
+        BeanUtils.copyProperties(ordersSubmitDTO, orders);
         orders.setUserId(userId);
         //LocalDateTime 和 Long类型不能进行自动类型转换
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
@@ -82,14 +82,14 @@ public class OrderServiceImpl implements OrderService {
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setPhone(address.getPhone());
-        orders.setAddress(address.getProvinceName()+address.getCityName()+address.getDistrictName()+address.getDetail());
+        orders.setAddress(address.getProvinceName() + address.getCityName() + address.getDistrictName() + address.getDetail());
         orders.setConsignee(address.getConsignee());
 
         orderMapper.insert(orders);
         Long orderId = orders.getId();
 
         List<OrderDetail> list = new ArrayList<>();
-        for(ShoppingCart sc:shoppingCartList){
+        for (ShoppingCart sc : shoppingCartList) {
             OrderDetail detail = new OrderDetail();
             detail.setName(sc.getName());
             detail.setOrderId(orderId);
@@ -138,8 +138,8 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException("该订单已支付");
         }*/
 
-        JSONObject jsonObject=new JSONObject();
-        jsonObject.put("code","ORDERPAID");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", "ORDERPAID");
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
 
@@ -166,9 +166,9 @@ public class OrderServiceImpl implements OrderService {
         //type: 1表示来单提醒，2表示用户催单
         //Map.of("type",1,"orderId",order.getId(),"content","订单号："+orderNumber);
         Map<Object, Object> objectMap = new HashMap<>();
-        objectMap.put("type",1);
-        objectMap.put("orderId",order.getId());
-        objectMap.put("content","订单号："+orderNumber);
+        objectMap.put("type", 1);
+        objectMap.put("orderId", order.getId());
+        objectMap.put("content", "订单号：" + orderNumber);
         String json = JSON.toJSONString(objectMap);
         webSocketServer.sendMessageToAll(json);
 
@@ -200,26 +200,26 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     // TODO 后续可以尝试对for循环里面的查询改为单道查询
     public PageResult listWithDetails(OrdersPageQueryDTO ordersPageQueryDTO) {
-        PageHelper.startPage(ordersPageQueryDTO.getPage(),ordersPageQueryDTO.getPageSize());
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
 
         //查询到部分的单
         List<Orders> list = orderMapper.list(ordersPageQueryDTO);
 
-        Page<Orders> p = (Page<Orders>)list;
+        Page<Orders> p = (Page<Orders>) list;
 
         List<OrderVO> orderAndDetailVOList = new ArrayList<>();
 
-        for(Orders order: list){
+        for (Orders order : list) {
             OrderVO obj = new OrderVO();
             List<Long> ids = Arrays.asList(order.getId());
 
             List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderIds(ids);
 
-            BeanUtils.copyProperties(order,obj);
+            BeanUtils.copyProperties(order, obj);
             obj.setOrderDetailList(orderDetailList);
 
             StringBuilder sb = new StringBuilder();
-            for(OrderDetail orderDetail:orderDetailList){
+            for (OrderDetail orderDetail : orderDetailList) {
                 sb.append(orderDetail.getName());
             }
             obj.setOrderDishes(sb.toString());
@@ -240,7 +240,7 @@ public class OrderServiceImpl implements OrderService {
 
         Orders orders = orderMapper.getById(orderId);
 
-        if(orders == null){
+        if (orders == null) {
             throw new NoSuchElementException(MessageConstant.ORDER_NOT_FOUND);
         }
 
@@ -248,7 +248,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderIds(ids);
 
         OrderVO orderVO = new OrderVO();
-        BeanUtils.copyProperties(orders,orderVO);
+        BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
 
         return orderVO;
@@ -265,7 +265,7 @@ public class OrderServiceImpl implements OrderService {
     public void repitition(Long id) {
         Orders orders = orderMapper.getById(id);
 
-        if(orders == null){
+        if (orders == null) {
             throw new NoSuchElementException(MessageConstant.ORDER_NOT_FOUND);
         }
 
@@ -278,21 +278,22 @@ public class OrderServiceImpl implements OrderService {
 
         List<Long> ids = Arrays.asList(id);
         List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderIds(ids);
-        orderDetailList.forEach(detail->detail.setOrderId(orders.getId()));
+        orderDetailList.forEach(detail -> detail.setOrderId(orders.getId()));
 
         orderDetailMapper.InsertBatch(orderDetailList);
     }
 
     /**
      * 各个状态的订单数量统计
+     *
      * @return
      */
     @Override
     @Transactional
     public OrderStatisticsVO statistics() {
-        Integer toBeComfirmed = orderMapper.statisticsByStatus(Map.of("status",Orders.TO_BE_CONFIRMED));
-        Integer comfirmed = orderMapper.statisticsByStatus(Map.of("status",Orders.CONFIRMED));
-        Integer deliveryInProgress = orderMapper.statisticsByStatus(Map.of("status",Orders.DELIVERY_IN_PROGRESS));
+        Integer toBeComfirmed = orderMapper.statisticsByStatus(Map.of("status", Orders.TO_BE_CONFIRMED));
+        Integer comfirmed = orderMapper.statisticsByStatus(Map.of("status", Orders.CONFIRMED));
+        Integer deliveryInProgress = orderMapper.statisticsByStatus(Map.of("status", Orders.DELIVERY_IN_PROGRESS));
 
         OrderStatisticsVO orderStatisticsVO = OrderStatisticsVO.builder()
                 .toBeConfirmed(toBeComfirmed)
@@ -350,7 +351,8 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 向商家端发送消息
-     * @param id
+     *
+     * @param id 订单id
      */
     @Override
     public void remind(Long id) {
@@ -358,9 +360,9 @@ public class OrderServiceImpl implements OrderService {
 
         Map<Object, Object> map = new HashMap<>();
         //type: 1,提醒接单 2,催单
-        map.put("type",2);
-        map.put("orderId",id);
-        map.put("content","订单号："+orders.getNumber());
+        map.put("type", 2);
+        map.put("orderId", id);
+        map.put("content", "订单号：" + orders.getNumber());
         String json = JSON.toJSONString(map);
         webSocketServer.sendMessageToAll(json);
     }
