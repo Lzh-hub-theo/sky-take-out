@@ -9,13 +9,23 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * websocket 服务接口
+ */
 @Component
 @ServerEndpoint("/ws/{sid}")
 public class WebSocketServer {
-    private static Map<String, Session> sessionMap = new HashMap<>();
+
+    // 使用 session -> 唯一reentrantLock 实现细粒度的锁并且不会发生死锁
+    private static final Map<Session, Lock> sessionLockMap = new ConcurrentHashMap<>();
+
+    // 使用线程安全的ConcurrentHashMap
+    private static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     /**
      * 客户端连接时保存session
@@ -48,6 +58,8 @@ public class WebSocketServer {
     @OnClose
     public void onClose(@PathParam("sid") String sid) {
         System.out.println("客户端断开连接：" + sid);
+        Session session = sessionMap.get(sid);
+        sessionLockMap.remove(session);
         sessionMap.remove(sid);
     }
 
@@ -59,10 +71,18 @@ public class WebSocketServer {
     public void sendMessageToAll(String msg) {
         Collection<Session> sessions = sessionMap.values();
         for (Session session : sessions) {
+            // 获取 session 专属的锁
+            Lock lock = sessionLockMap.computeIfAbsent(session, k -> new ReentrantLock());
+
+            // 对 lock 对象加锁，确保同一时间只有一个线程能向该 session 发送消息
+            lock.lock();
             try {
                 session.getBasicRemote().sendText(msg);
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                // 有异常也得开锁
+                lock.unlock();
             }
         }
     }
