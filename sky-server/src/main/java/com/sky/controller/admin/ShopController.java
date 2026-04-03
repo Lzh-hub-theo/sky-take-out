@@ -24,13 +24,12 @@ public class ShopController {
      * Integer status
      * @return
      */
-    // TODO
     @ApiOperation("设置营业状态")
     @PutMapping("/{status}")
     public Result setStatus(@PathVariable Integer status){
         log.info("设置营业状态:{}",status==1?"营业中":"打样中");
 
-        redisTemplate.opsForValue().set(KEY,status);
+        redisTemplate.opsForValue().set(KEY,status.toString());
 
         return Result.success();
     }
@@ -43,8 +42,9 @@ public class ShopController {
     @GetMapping("/status")
     public Result<Integer> getStatus(){
         log.info("获取营业状态");
+        String statusStr = (String) redisTemplate.opsForValue().get(KEY);
 
-        Integer status =(Integer) redisTemplate.opsForValue().get(KEY);
+        Integer status = "1".equals(statusStr)?1:2;
 
         return Result.success(status);
     }
