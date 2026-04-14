@@ -138,24 +138,20 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException("该订单已支付");
         }*/
 
+        // 模拟微信支付转发假数据
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", "ORDERPAID");
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
 
-        Integer orderPaidStatus = Orders.PAID;
-        Integer orderStatus = Orders.TO_BE_CONFIRMED;
-
-        LocalDateTime checkoutTime = LocalDateTime.now();
-
+        // 调用updateStatus，用于替换微信支付更新数据库状态的问题
         String orderNumber = ordersPaymentDTO.getOrderNumber();
-
-        log.info("调用updateStatus，用于替换微信支付更新数据库状态的问题");
         Orders order = Orders.builder()
-                .status(orderStatus)
-                .payStatus(orderPaidStatus)
-                .checkoutTime(checkoutTime)
-                .number(orderNumber).build();
+                .status(Orders.TO_BE_CONFIRMED)
+                .payStatus(Orders.PAID)
+                .checkoutTime(LocalDateTime.now())
+                .number(orderNumber)
+                .build();
         orderMapper.updateStatus(order);
 
         //清空购物车
