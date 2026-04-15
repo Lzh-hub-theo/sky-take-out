@@ -15,4 +15,12 @@
             #{id}
         </foreach>
     </delete>
+
+    <select id="queryBatchByIds" resultType="com.sky.entity.DishFlavor">
+        select * from dish_flavor where dish_id in
+        <foreach collection="dish_ids" item="dish_id" open="(" separator="," close=")">
+            #{dish_id}
+        </foreach>
+    </select>
+
 </mapper>

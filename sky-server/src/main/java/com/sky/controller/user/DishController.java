@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Api(tags="菜品浏览接口")
+@Api(tags = "菜品浏览接口")
 @RestController("userDishController")
 @RequestMapping("/user/dish")
 @Slf4j
@@ -27,22 +27,23 @@ public class DishController {
 
     /**
      * 根据分类id查询菜品
+     *
      * @param categoryId
      * @return
      */
     @ApiOperation("根据分类id查询菜品")
     @GetMapping("/list")
     public Result<List<DishVO>> queryByCategoryId(Long categoryId) {
-        log.info("根据分类id查询菜品:{}",categoryId);
-        String key="dish_"+categoryId;
+        log.info("根据分类id查询菜品:{}", categoryId);
+        String key = "dish_" + categoryId;
         List<DishVO> dishes = (List<DishVO>) redisTemplate.opsForValue().get(key);
 
-        if(dishes != null && dishes.size()>0){
+        if (dishes != null && dishes.size() > 0) {
             return Result.success(dishes);
         }
 
-        dishes = dishService.queryByCategoryId(categoryId);
-        redisTemplate.opsForValue().set(key,dishes);
+        dishes = dishService.queryByCategoryIdAdam(categoryId);
+        redisTemplate.opsForValue().set(key, dishes);
         return Result.success(dishes);
     }
 }

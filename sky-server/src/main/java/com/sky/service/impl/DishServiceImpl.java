@@ -165,6 +165,38 @@ public class DishServiceImpl implements DishService {
         return dishVOs;
     }
 
+    @Transactional
+    public List<DishVO> queryByCategoryIdAdam(Long categoryId) {
+        List<DishVO> dishVOs=new ArrayList<>();
+
+        // 通过分类批量获取多个菜品
+        Dish d = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        List<Dish> dishes = dishMapper.queryBatchByCategoryId(d);
+
+        // 通过多个菜品id批量获取多个菜品的口味
+        List<Long> ids = dishes.stream()
+                .map(Dish::getId)
+                .collect(Collectors.toList());
+        List<DishFlavor> flavors = dishFlavorMapper.queryBatchByIds(ids);
+
+        // 通过stream通过dish_id分类获得 id对口味数组的映射关系
+        Map<Long, List<DishFlavor>> dishFlavorMap = flavors.stream()
+                .collect(Collectors.groupingBy(DishFlavor::getDishId));
+
+        // for循环组装数据
+        for(Dish dish: dishes){
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(dish,dishVO);
+            List<DishFlavor> dishFlavors = dishFlavorMap.get(dish.getId());
+            dishVO.setFlavors(dishFlavors);
+            dishVOs.add(dishVO);
+        }
+        return dishVOs;
+    }
+
     @Override
     public void modifyStatus(Dish dish) {
         dishMapper.modify(dish);

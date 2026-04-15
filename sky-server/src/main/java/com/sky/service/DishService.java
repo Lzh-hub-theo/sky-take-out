@@ -26,6 +26,8 @@ public interface DishService {
      */
     List<DishVO> queryByCategoryId(Long categoryId);
 
+    List<DishVO> queryByCategoryIdAdam(Long categoryId);
+
     void modifyStatus(Dish dish);
 
     List<Dish> listByCategoryId(Long categoryId);
