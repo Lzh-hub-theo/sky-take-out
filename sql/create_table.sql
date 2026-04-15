@@ -67,6 +67,10 @@ CREATE TABLE `dish`
   DEFAULT CHARSET = utf8mb3
   COLLATE = utf8_bin COMMENT ='菜品';
 
+# 修改菜品表
+ALTER TABLE `dish`
+    ADD COLUMN `stock` INT DEFAULT NULL COMMENT '菜品库存';
+
 # 菜品口味表
 DROP TABLE IF EXISTS `dish_flavor`;
 CREATE TABLE `dish_flavor`

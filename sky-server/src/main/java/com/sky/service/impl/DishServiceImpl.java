@@ -10,10 +10,7 @@ import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
 import com.sky.exception.BaseException;
 import com.sky.exception.DeletionNotAllowedException;
-import com.sky.mapper.CategoryMapper;
-import com.sky.mapper.DishFlavorMapper;
-import com.sky.mapper.DishMapper;
-import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
@@ -24,42 +21,43 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DishServiceImpl implements DishService {
 
     @Autowired
-    DishMapper dishMapper;
+    private DishMapper dishMapper;
     @Autowired
-    DishFlavorMapper dishFlavorMapper;
+    private DishFlavorMapper dishFlavorMapper;
     @Autowired
-    SetmealDishMapper setmealDishMapper;
+    private SetmealDishMapper setmealDishMapper;
     @Autowired
-    CategoryMapper categoryMapper;
+    private CategoryMapper categoryMapper;
 
     @Transactional
     @Override
     public void saveWithFlavor(DishDTO dishDTO) {
         Dish dish = new Dish();
-        BeanUtils.copyProperties(dishDTO ,dish);
+        BeanUtils.copyProperties(dishDTO, dish);
 
         dishMapper.insert(dish);
 
         Long dishId = dish.getId();
         List<DishFlavor> flavors = dishDTO.getFlavors();
-        if(flavors!=null && flavors.size()>0) {
+        if (flavors != null && flavors.size() > 0) {
             flavors.forEach(flavor -> flavor.setDishId(dishId));
         }
 
         dishFlavorMapper.insertBatch(flavors);
-
     }
 
     @Override
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) {
-        PageHelper.startPage(dishPageQueryDTO.getPage(),dishPageQueryDTO.getPageSize());
+        PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
         List<DishVO> lists = dishMapper.pageQuery(dishPageQueryDTO);
-        Page<DishVO> p=(Page<DishVO>) lists;
+        Page<DishVO> p = (Page<DishVO>) lists;
 
         PageResult pageResult = new PageResult();
         pageResult.setTotal(p.getTotal());
@@ -69,6 +67,7 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 批量删除菜品
+     *
      * @param ids
      */
     @Override
@@ -80,44 +79,53 @@ public class DishServiceImpl implements DishService {
         关联套餐不能删
         删完后相关联的口味都删掉
          */
-        if(ids==null || ids.size()<=0){throw new BaseException("未知异常");}
+        if (ids == null || ids.size() <= 0) {
+            throw new BaseException("未知异常");
+        }
 
         List<Integer> statusList = dishMapper.queryStatusByIds(ids);
-        for(Integer status:statusList){
-            if(status == StatusConstant.ENABLE) throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
+        for (Integer status : statusList) {
+            if (status == StatusConstant.ENABLE) throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
         }
 
         List<Long> setmealIds = setmealDishMapper.querySetmealIdByDishIds(ids);
-        if(setmealIds!=null && setmealIds.size()>0) throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
+        if (setmealIds != null && setmealIds.size() > 0)
+            throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
 
         dishMapper.deleteBatch(ids);
-
         dishFlavorMapper.deleteBatchByDishIds(ids);
     }
 
     /**
      * 修改菜品
+     *
      * @param dishVO
      */
     @Override
     @Transactional
     public void modifyWithFlavor(DishVO dishVO) {
-        Dish dish=new Dish();
-        BeanUtils.copyProperties(dishVO,dish);
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishVO, dish);
 
         dishMapper.modify(dish);
-        List<DishFlavor> flavors = dishVO.getFlavors();
         Long id = dishVO.getId();
-        flavors.forEach(flavor -> flavor.setDishId(id));
+        List<DishFlavor> flavors = dishVO.getFlavors();
 
-        ArrayList<Long> ids=new ArrayList<>();
-        ids.add(id);
-        dishFlavorMapper.deleteBatchByDishIds(ids);
-        dishFlavorMapper.insertBatch(flavors);
+        if (id != null) {
+            ArrayList<Long> ids = new ArrayList<>();
+            ids.add(id);
+            dishFlavorMapper.deleteBatchByDishIds(ids);
+        }
+
+        if (flavors != null && !flavors.isEmpty()) {
+            flavors.forEach(flavor -> flavor.setDishId(id));
+            dishFlavorMapper.insertBatch(flavors);
+        }
     }
 
     /**
      * 根据id查询菜品
+     *
      * @param id
      * @return
      */
@@ -125,14 +133,11 @@ public class DishServiceImpl implements DishService {
     @Transactional
     public DishVO queryById(Long id) {
         Dish dish = dishMapper.queryById(id);
-
         List<DishFlavor> flavors = dishFlavorMapper.queryByDishId(id);
-
         String categoryName = categoryMapper.queryNameById(dish.getCategoryId());
 
-        DishVO dishVO=new DishVO();
-
-        BeanUtils.copyProperties(dish,dishVO);
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish, dishVO);
         dishVO.setCategoryName(categoryName);
         dishVO.setFlavors(flavors);
 
@@ -141,22 +146,23 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 根据分类id查询菜品
+     *
      * @param categoryId
      * @return
      */
     @Override
     @Transactional
     public List<DishVO> queryByCategoryId(Long categoryId) {
-        List<DishVO> dishVOs=new ArrayList<>();
+        List<DishVO> dishVOs = new ArrayList<>();
 
         Dish d = Dish.builder().categoryId(categoryId).status(StatusConstant.ENABLE).build();
         List<Dish> dishes = dishMapper.queryBatchByCategoryId(d);
 
-        for(Dish dish:dishes){
-            DishVO temp=new DishVO();
+        for (Dish dish : dishes) {
+            DishVO temp = new DishVO();
             List<DishFlavor> flavors = dishFlavorMapper.queryByDishId(dish.getId());
 
-            BeanUtils.copyProperties(dish,temp);
+            BeanUtils.copyProperties(dish, temp);
             temp.setFlavors(flavors);
 
             dishVOs.add(temp);
@@ -167,7 +173,7 @@ public class DishServiceImpl implements DishService {
 
     @Transactional
     public List<DishVO> queryByCategoryIdAdam(Long categoryId) {
-        List<DishVO> dishVOs=new ArrayList<>();
+        List<DishVO> dishVOs = new ArrayList<>();
 
         // 通过分类批量获取多个菜品
         Dish d = Dish.builder()
@@ -187,9 +193,9 @@ public class DishServiceImpl implements DishService {
                 .collect(Collectors.groupingBy(DishFlavor::getDishId));
 
         // for循环组装数据
-        for(Dish dish: dishes){
+        for (Dish dish : dishes) {
             DishVO dishVO = new DishVO();
-            BeanUtils.copyProperties(dish,dishVO);
+            BeanUtils.copyProperties(dish, dishVO);
             List<DishFlavor> dishFlavors = dishFlavorMap.get(dish.getId());
             dishVO.setFlavors(dishFlavors);
             dishVOs.add(dishVO);

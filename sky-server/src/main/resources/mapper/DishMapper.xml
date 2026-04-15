@@ -3,12 +3,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.DishMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into dish(name, category_id, price, image, description, create_time, update_time, create_user, update_user, status) values
-            (#{name},#{categoryId},#{price},#{image},#{description},#{createTime},#{updateTime},#{createUser},#{updateUser},#{status})
+        insert into dish(name, category_id, price, image, description, create_time, update_time, create_user, update_user, status, stock) values
+            (#{name},#{categoryId},#{price},#{image},#{description},#{createTime},#{updateTime},#{createUser},#{updateUser},#{status},#{stock})
     </insert>
 
     <select id="pageQuery" resultType="com.sky.vo.DishVO">
-        select dish.id id, dish.name name, dish.price price, dish.image image, dish.description description, dish.status status, dish.update_time update_time, category.name as category_name from dish,category
+        select dish.id id, dish.name name, dish.price price, dish.image image, dish.description description, dish.status status, dish.update_time update_time, category.name, dish.stock as category_name from dish,category
             <where>
                 dish.category_id=category.id
                 <if test="name!=null">
@@ -47,6 +47,7 @@
             <if test="price!=null">,price=#{price}</if>
             <if test="description!=null"> ,description=#{description}</if>
             <if test="status!=null">,status=#{status}</if>
+            <if test="stock!=null">,stock=#{stock}</if>
         </set>
         where id = #{id}
     </update>
