@@ -8,7 +8,7 @@
     </insert>
 
     <select id="pageQuery" resultType="com.sky.vo.DishVO">
-        select dish.id id, dish.name name, dish.price price, dish.image image, dish.description description, dish.status status, dish.update_time update_time, category.name, dish.stock as category_name from dish,category
+        select dish.id id, dish.name name, dish.price price, dish.image image, dish.description description, dish.status status, dish.update_time update_time, category.name as category_name, dish.stock as stock from dish,category
             <where>
                 dish.category_id=category.id
                 <if test="name!=null">
