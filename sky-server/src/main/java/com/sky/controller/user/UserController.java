@@ -12,10 +12,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.sky.constant.RedisKeyConstant.DISH_STOCK_KEY;
 
 @RestController
 @RequestMapping("/user/user")
@@ -50,4 +54,16 @@ public class UserController {
         return Result.success(userLoginVO);
     }
 
+    @Autowired
+    private RedisTemplate<String, Integer> redisTemplate;
+
+    @PostMapping("/test")
+    public Result<Integer> testRedisOpsForHash(){
+        String key = DISH_STOCK_KEY;
+        String hashKey = String.valueOf(1);
+        redisTemplate.opsForHash().put(key,hashKey,28);
+        Integer dishStock = (Integer) redisTemplate.opsForHash().get(key, hashKey);
+        redisTemplate.expire(key, 1, TimeUnit.HOURS);
+        return Result.success(dishStock);
+    }
 }

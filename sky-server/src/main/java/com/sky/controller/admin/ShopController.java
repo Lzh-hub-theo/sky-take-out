@@ -8,43 +8,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import static com.sky.constant.RedisKeyConstant.SHOP_STATUS_KEY;
+
 @Slf4j
 @RestController("adminShopController")
 @RequestMapping("/admin/shop")
-@Api(tags="店铺相关接口")
+@Api(tags = "店铺相关接口")
 public class ShopController {
-
-    public static final String KEY="SHOP_STATUS";
-
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Integer> redisTemplate;
 
     /**
      * 设置营业状态
      * Integer status
+     *
      * @return
      */
     @ApiOperation("设置营业状态")
     @PutMapping("/{status}")
-    public Result setStatus(@PathVariable Integer status){
-        log.info("设置营业状态:{}",status==1?"营业中":"打样中");
+    public Result setStatus(@PathVariable Integer status) {
+        log.info("设置营业状态:{}", status == 1 ? "营业中" : "打样中");
 
-        redisTemplate.opsForValue().set(KEY,status.toString());
+        redisTemplate.opsForValue().set(SHOP_STATUS_KEY, status);
 
         return Result.success();
     }
 
     /**
      * 获取营业状态
+     *
      * @return
      */
     @ApiOperation("获取营业状态")
     @GetMapping("/status")
-    public Result<Integer> getStatus(){
+    public Result<Integer> getStatus() {
         log.info("获取营业状态");
-        String statusStr = (String) redisTemplate.opsForValue().get(KEY);
 
-        Integer status = "1".equals(statusStr)?1:2;
+        Integer status = redisTemplate.opsForValue().get(SHOP_STATUS_KEY);
 
         return Result.success(status);
     }

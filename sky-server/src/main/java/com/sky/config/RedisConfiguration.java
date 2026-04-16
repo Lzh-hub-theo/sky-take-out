@@ -2,6 +2,7 @@ package com.sky.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,14 +11,18 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.util.List;
+
 @Configuration
 @Slf4j
 public class RedisConfiguration {
 
+    /**
+     * 获取店铺状态的缓存、菜品库存的缓存
+     */
     @Bean
-    public RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory){
-        log.info("开始创建redis模版");
-        RedisTemplate redisTemplate = new RedisTemplate();
+    public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory connectionFactory){
+        RedisTemplate<String, Integer> redisTemplate = new RedisTemplate<>();
         //设置redis的连接工厂对象
         redisTemplate.setConnectionFactory(connectionFactory);
         //支持Java8的日期时间
@@ -27,9 +32,38 @@ public class RedisConfiguration {
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
         GenericJackson2JsonRedisSerializer jsonRedisSerializer =
                 new GenericJackson2JsonRedisSerializer(objectMapper);
-        //设置redis key序列化器
+        //设置 redis key序列化器
         redisTemplate.setKeySerializer(stringRedisSerializer);
         redisTemplate.setValueSerializer(jsonRedisSerializer);
+
+        // 设置 Redis Hash Key 的序列器
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashValueSerializer(jsonRedisSerializer);
+        return redisTemplate;
+    }
+
+    /**
+     * 根据分类 id 获取取菜单和口味的json数据缓存
+     */
+    @Bean
+    public RedisTemplate<String, List<DishVO>> jsonRedisTemplate(RedisConnectionFactory connectionFactory){
+        RedisTemplate<String, List<DishVO>> redisTemplate = new RedisTemplate<>();
+        //设置redis的连接工厂对象
+        redisTemplate.setConnectionFactory(connectionFactory);
+        //支持Java8的日期时间
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        //string序列化
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer jsonRedisSerializer =
+                new GenericJackson2JsonRedisSerializer(objectMapper);
+        //设置 redis key序列化器
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setValueSerializer(jsonRedisSerializer);
+
+        // 设置 Redis Hash Key 的序列器
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashValueSerializer(jsonRedisSerializer);
         return redisTemplate;
     }
 }

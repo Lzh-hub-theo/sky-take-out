@@ -10,17 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.sky.constant.RedisKeyConstant.SHOP_STATUS_KEY;
+
 @RestController("userShopController")
 @RequestMapping("/user/shop")
 @Slf4j
-//@Api(tags="用户端相关接口")
 @Api(tags="店铺相关接口")
 public class ShopController {
-
-    public static final String KEY="SHOP_STATUS";
-
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Integer> redisTemplate;
 
     /**
      * 获取营业状态
@@ -29,8 +27,9 @@ public class ShopController {
     @ApiOperation("获取营业状态")
     @GetMapping("/status")
     public Result<Integer> getStatus(){
-        Integer shopStatus = (Integer) redisTemplate.opsForValue().get(KEY);
-        log.info("获取营业状态:{}",shopStatus==1?"营业中":"打样中");
+        Integer shopStatus = redisTemplate.opsForValue().get(SHOP_STATUS_KEY);
+        shopStatus = shopStatus == null ? 0 : shopStatus;
+        log.info("获取营业状态:{}",shopStatus == 1?"营业中":"打烊中");
         return Result.success(shopStatus);
     }
 }

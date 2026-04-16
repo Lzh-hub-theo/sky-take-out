@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.sky.constant.RedisKeyConstant.DISH_CATEGORY_PREFIX_KEY;
 
 @Api(tags = "菜品浏览接口")
 @RestController("userDishController")
@@ -23,27 +26,28 @@ public class DishController {
     @Autowired
     DishService dishService;
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, List<DishVO>> jsonRedisTemplate;
 
     /**
      * 根据分类id查询菜品
      *
-     * @param categoryId
-     * @return
+     * @param categoryId 分类id
+     * @return 菜品列表
      */
     @ApiOperation("根据分类id查询菜品")
     @GetMapping("/list")
     public Result<List<DishVO>> queryByCategoryId(Long categoryId) {
         log.info("根据分类id查询菜品:{}", categoryId);
-        String key = "dish_" + categoryId;
-        List<DishVO> dishes = (List<DishVO>) redisTemplate.opsForValue().get(key);
+        String key = DISH_CATEGORY_PREFIX_KEY + categoryId;
+        List<DishVO> dishes = jsonRedisTemplate.opsForValue().get(key);
 
         if (dishes != null && dishes.size() > 0) {
             return Result.success(dishes);
         }
 
         dishes = dishService.queryByCategoryIdAdam(categoryId);
-        redisTemplate.opsForValue().set(key, dishes);
+        jsonRedisTemplate.opsForValue().set(key, dishes);
+        jsonRedisTemplate.expire(key, 1, TimeUnit.HOURS);
         return Result.success(dishes);
     }
 }

@@ -58,4 +58,8 @@
             and status = #{status}
         </if>
     </select>
+
+    <select id="getDishStockMap" resultType="com.sky.entity.DishStock">
+        select id as dishId, stock from dish
+    </select>
 </mapper>
