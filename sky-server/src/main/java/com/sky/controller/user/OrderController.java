@@ -1,8 +1,6 @@
 package com.sky.controller.user;
 
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
@@ -14,6 +12,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
 
 @RestController("userOrderController")
 @RequestMapping("/user/order")
@@ -35,6 +36,7 @@ public class OrderController {
     public Result<OrderSubmitVO> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("用户下单:{}", ordersSubmitDTO);
         OrderSubmitVO orderSubmitVO = orderService.submit(ordersSubmitDTO);
+        List<CartItemDTO> cartItems = ordersSubmitDTO.getCartItems();
         return Result.success(orderSubmitVO);
     }
 
@@ -120,5 +122,16 @@ public class OrderController {
         log.info("催单");
         orderService.remind(id);
         return Result.success();
+    }
+
+    /**
+     * 获取预计送达时间
+     * @param params 店铺ID和收货地址
+     * @return 预计送达时间字符串 (格式: yyyy-MM-dd HH:mm:ss)
+     */
+    @GetMapping("/getEstimatedDeliveryTime")
+    public Result<String> getEstimatedDeliveryTime(@Valid EstimatedDeliveryTimeDTO params) {
+        String estimatedTime = orderService.calculateEstimatedDeliveryTime(params);
+        return Result.success(estimatedTime);
     }
 }

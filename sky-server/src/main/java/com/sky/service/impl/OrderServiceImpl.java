@@ -27,7 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.sky.constant.OrderConstants.*;
 
 @Service
 @Slf4j
@@ -361,5 +365,30 @@ public class OrderServiceImpl implements OrderService {
         map.put("content", "订单号：" + orders.getNumber());
         String json = JSON.toJSONString(map);
         webSocketServer.sendMessageToAll(json);
+    }
+
+    /**
+     * 计算预计送达时间
+     */
+    @Override
+    public String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params) {
+        // 1. 获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+
+        // 2. 计算基础送达时间 = 当前时间 + 配送时长
+        LocalDateTime estimated = now.plusMinutes(DELIVERY_MINUTES);
+
+        // 3. 处理非营业时间情况
+        LocalTime time = estimated.toLocalTime();
+        if (time.isBefore(BUSINESS_START)) {
+            // 若早于营业开始，则顺延至当日营业开始时间 + 配送时长
+            estimated = LocalDateTime.of(estimated.toLocalDate(), BUSINESS_START).plusMinutes(DELIVERY_MINUTES);
+        } else if (time.isAfter(BUSINESS_END)) {
+            // 若晚于营业结束，则顺延至次日营业开始时间 + 配送时长
+            estimated = LocalDateTime.of(estimated.toLocalDate().plusDays(1), BUSINESS_START).plusMinutes(DELIVERY_MINUTES);
+        }
+
+        // 4. 返回格式化的时间字符串 (前端使用 dayjs 解析)
+        return estimated.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

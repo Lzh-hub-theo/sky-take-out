@@ -1,6 +1,8 @@
 package com.sky.controller.user;
 
+import com.sky.dto.ShopInfoDTO;
 import com.sky.result.Result;
+import com.sky.service.ShopService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,9 @@ public class ShopController {
     @Autowired
     private RedisTemplate<String, Integer> redisTemplate;
 
+    @Autowired
+    private ShopService shopService;
+
     /**
      * 获取营业状态
      * @return
@@ -31,5 +36,14 @@ public class ShopController {
         shopStatus = shopStatus == null ? 0 : shopStatus;
         log.info("获取营业状态:{}",shopStatus == 1?"营业中":"打烊中");
         return Result.success(shopStatus);
+    }
+
+    /**
+     * 获取店铺联系方式等信息
+     */
+    @GetMapping("/getMerchantInfo")
+    public Result<ShopInfoDTO> getMerchantInfo() {
+        ShopInfoDTO shopInfo = shopService.getMerchantInfo();
+        return Result.success(shopInfo);
     }
 }

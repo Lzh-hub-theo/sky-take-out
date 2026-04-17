@@ -60,4 +60,7 @@ public interface OrderService {
     void modifyStatusToComplete(Long id);
 
     void remind(Long id);
+
+    String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params);
+
 }
