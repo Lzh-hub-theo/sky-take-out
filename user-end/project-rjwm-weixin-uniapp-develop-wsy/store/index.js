@@ -74,7 +74,7 @@ const store = new Vuex.Store({
 		},
 		// 保存配送费
 		setDeliveryFee(state, deliveryFee) {
-			state.deliveryFee = deliveryFee
+			state.deliveryFee = deliveryFee ?? 0;
 		},
 		// 设置性别
 		setGender(state, gender) {

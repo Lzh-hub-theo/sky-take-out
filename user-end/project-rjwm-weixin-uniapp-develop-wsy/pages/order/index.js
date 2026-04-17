@@ -271,6 +271,16 @@ export default {
 		closeMask() {
 			this.openPayType = false
 		},
+		// 提取购物车数量信息
+		buildCartItems() {
+		  return this.orderListDataes.map(item => {
+		    return {
+		      dishId: item.dishId,
+			  setmealId: item.setmealId,
+		      stock: item.number
+		    };
+		  });
+		},
 		// 支付下单
 		payOrderHandle() {
 			this.isHandlePy = true
@@ -282,6 +292,9 @@ export default {
 				})
 				return false
 			}
+			
+			const cartItems = this.buildCartItems();
+			
 			const params = {
 				payMethod: 1,
 				addressBookId: this.addressBookId,
@@ -295,7 +308,8 @@ export default {
 				packAmount: this.orderDishNumber,
 				amount: this.orderDishPrice,
 				shopId: this.shopInfo().shopId,
-				deliveryFee: this.deliveryFee()
+				deliveryFee: this.deliveryFee(),
+				cartItems: cartItems
 			}
 
 			submitOrderSubmit(params).then(res => {
