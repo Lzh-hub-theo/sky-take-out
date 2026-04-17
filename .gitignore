@@ -6,3 +6,11 @@
 **/test/
 application-dev.yml
 a.json
+
+user-end/project-rjwm-weixin-uniapp-develop-wsy/unpackage/
+# Windows
+user-end/[Dd]esktop.ini
+user-end/Thumbs.db
+user-end/$RECYCLE.BIN/
+user-end/# Node.js
+user-end/node_modules/
