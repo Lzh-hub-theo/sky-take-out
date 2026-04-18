@@ -123,12 +123,18 @@
             <artifactId>qiniu-java-sdk</artifactId>
         </dependency>-->
 
-        <!-- rabbitmq -->
+        <!-- rabbitmq 原生API 用于学习rabbitmq -->
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.20.0</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- spring框架整合 rabbitmq -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
     </dependencies>
 

@@ -7,6 +7,8 @@ import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 
+import java.util.List;
+
 public interface OrderService {
     OrderSubmitVO submit(OrdersSubmitDTO ordersSubmitDTO);
 
@@ -62,5 +64,9 @@ public interface OrderService {
     void remind(Long id);
 
     String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params);
+
+    String deductStock(List<CartItemDTO> orderItems);
+
+    void sendOrderMessage(OrdersSubmitDTO orderSubmitDTO);
 
 }

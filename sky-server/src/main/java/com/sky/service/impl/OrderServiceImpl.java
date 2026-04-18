@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.config.RabbitMQConfiguration;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.*;
@@ -21,8 +22,11 @@ import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import com.sky.webSocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.sky.constant.OrderConstants.*;
+import static com.sky.constant.RedisKeyConstant.DISH_STOCK_KEY;
 
 @Service
 @Slf4j
@@ -53,6 +58,13 @@ public class OrderServiceImpl implements OrderService {
     private BaiduGeoUtils baiduGeoUtils;
     @Autowired
     private WebSocketServer webSocketServer;
+    @Autowired
+    private RedisTemplate<String, String> stockRedisTemplate;
+    @Autowired
+    private DefaultRedisScript<String> stockScript;
+    @Autowired
+    private AmqpTemplate rabbitmqTemplate;
+
 
     @Override
     @Transactional
@@ -390,5 +402,45 @@ public class OrderServiceImpl implements OrderService {
 
         // 4. 返回格式化的时间字符串 (前端使用 dayjs 解析)
         return estimated.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    @Override
+    public String deductStock(List<CartItemDTO> orderItems) {
+        // 1. 准备 KEYS 参数
+        List<String> keys = new ArrayList<>();
+        keys.add(DISH_STOCK_KEY);
+
+        // 2. 准备 ARGV 参数
+        List<Object> argv = new ArrayList<>();
+        for (CartItemDTO item : orderItems) {
+            argv.add(String.valueOf(item.getDishId()));
+            argv.add(String.valueOf(item.getStock()));
+        }
+
+        // 3. 执行脚本
+        return stockRedisTemplate.execute(
+                stockScript,
+                keys,
+                argv.toArray()
+        );
+    }
+
+    @Override
+    public void sendOrderMessage(OrdersSubmitDTO orderSubmitDTO) {
+        OrderSubmitBaseDTO message = new OrderSubmitBaseDTO();
+        BeanUtils.copyProperties(orderSubmitDTO,message);
+        try {
+            // 将对象序列化为 JSON 字符串发送
+            String messageJson = JSON.toJSONString(message);
+
+            rabbitmqTemplate.convertAndSend(
+                    RabbitMQConfiguration.ORDER_EXCHANGE,
+                    RabbitMQConfiguration.ORDER_ROUTING_KEY,
+                    messageJson
+            );
+            System.out.println("消息发送成功: " + messageJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

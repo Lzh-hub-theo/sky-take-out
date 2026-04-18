@@ -19,4 +19,13 @@ public final class OrderConstants {
 
     /** 营业结束时间 */
     public static final LocalTime BUSINESS_END = LocalTime.of(22, 30);
+
+    /** 无该菜品 */
+    public static final String NO_DISH_RESULT = "-1";
+
+    /** 库存不足 */
+    public static final String LACK_RESULT = "0";
+
+    /** 预减成功 */
+    public static final String DEDUCT_SUCCESS_RESULT = "1";
 }

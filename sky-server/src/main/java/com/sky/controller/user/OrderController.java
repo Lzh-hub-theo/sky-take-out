@@ -1,6 +1,7 @@
 package com.sky.controller.user;
 
 import com.sky.dto.*;
+import com.sky.exception.BaseException;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+
+import static com.sky.constant.OrderConstants.*;
 
 @RestController("userOrderController")
 @RequestMapping("/user/order")
@@ -35,9 +38,22 @@ public class OrderController {
     @ApiOperation("用户下单")
     public Result<OrderSubmitVO> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("用户下单:{}", ordersSubmitDTO);
-        OrderSubmitVO orderSubmitVO = orderService.submit(ordersSubmitDTO);
         List<CartItemDTO> cartItems = ordersSubmitDTO.getCartItems();
-        return Result.success(orderSubmitVO);
+        String result = orderService.deductStock(cartItems);
+        switch (result){
+            case NO_DISH_RESULT :
+                throw new BaseException("无该商品");
+            case LACK_RESULT :
+                throw new BaseException("库存不足");
+            case DEDUCT_SUCCESS_RESULT:
+                orderService.sendOrderMessage(ordersSubmitDTO);
+                break;
+            default:
+                throw new BaseException("未知的消息格式："+result);
+        }
+//        OrderSubmitVO orderSubmitVO = orderService.submit(ordersSubmitDTO);
+//        return Result.success(orderSubmitVO);
+        return Result.success();
     }
 
     /**
