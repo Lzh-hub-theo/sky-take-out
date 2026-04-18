@@ -29,7 +29,7 @@ public class DishController {
     @Autowired
     private DishService dishService;
     @Autowired
-    RedisTemplate redisTemplate;
+    RedisTemplate<String, Integer> redisTemplate;
 
     /**
      * 新增菜品

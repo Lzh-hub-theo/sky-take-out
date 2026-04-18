@@ -20,7 +20,7 @@ import static com.sky.constant.RedisKeyConstant.SHOP_STATUS_KEY;
 @Api(tags="店铺相关接口")
 public class ShopController {
     @Autowired
-    private RedisTemplate<String, Integer> redisTemplate;
+    private RedisTemplate<String, Integer> shopStatusRedisTemplate;
 
     @Autowired
     private ShopService shopService;
@@ -32,7 +32,7 @@ public class ShopController {
     @ApiOperation("获取营业状态")
     @GetMapping("/status")
     public Result<Integer> getStatus(){
-        Integer shopStatus = redisTemplate.opsForValue().get(SHOP_STATUS_KEY);
+        Integer shopStatus = shopStatusRedisTemplate.opsForValue().get(SHOP_STATUS_KEY);
         shopStatus = shopStatus == null ? 0 : shopStatus;
         log.info("获取营业状态:{}",shopStatus == 1?"营业中":"打烊中");
         return Result.success(shopStatus);

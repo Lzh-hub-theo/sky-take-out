@@ -18,7 +18,24 @@ import java.util.List;
 public class RedisConfiguration {
 
     /**
-     * 获取店铺状态的缓存、菜品库存的缓存
+     * 菜品库存的缓存
+     * @param connectionFactory
+     * @return
+     */
+    @Bean
+    public RedisTemplate<String, String> stockRedisTemplate(RedisConnectionFactory connectionFactory){
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setValueSerializer(stringRedisSerializer);
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashValueSerializer(stringRedisSerializer);
+        return redisTemplate;
+    }
+
+    /**
+     * 获取店铺状态的缓存
      */
     @Bean
     public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory connectionFactory){
