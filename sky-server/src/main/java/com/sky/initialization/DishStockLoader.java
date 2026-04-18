@@ -25,8 +25,6 @@ public class DishStockLoader {
     @EventListener(ApplicationReadyEvent.class)
     public void loadStock(){
         Map<Long, DishStock> dishStockMap = dishMapper.getDishStockMap();
-        System.out.println(dishStockMap);
-
         Map<String, Integer> map = dishStockMap.entrySet().stream()
                 .collect(Collectors.toMap(
                         entry -> String.valueOf(entry.getKey()),
