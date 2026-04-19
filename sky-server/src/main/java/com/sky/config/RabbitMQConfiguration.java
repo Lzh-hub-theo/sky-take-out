@@ -6,14 +6,10 @@ import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import static com.sky.constant.RabbitMQConstant.*;
 
 @Configuration
 public class RabbitMQConfiguration {
-
-    public static final String ORDER_QUEUE = "order.submit.queue";
-    public static final String ORDER_EXCHANGE = "order.exchange";
-    public static final String ORDER_ROUTING_KEY = "order.submit.key";
-
     @Bean
     public Queue orderQueue(){
         boolean durable = true;

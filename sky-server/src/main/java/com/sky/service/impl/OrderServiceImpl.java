@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.sky.config.RabbitMQConfiguration;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.*;
@@ -62,13 +61,10 @@ public class OrderServiceImpl implements OrderService {
     private RedisTemplate<String, String> stockRedisTemplate;
     @Autowired
     private DefaultRedisScript<String> stockScript;
-    @Autowired
-    private AmqpTemplate rabbitmqTemplate;
-
 
     @Override
     @Transactional
-    public OrderSubmitVO submit(OrdersSubmitDTO ordersSubmitDTO) {
+    public OrderSubmitVO submit(OrderSubmitBaseDTO ordersSubmitDTO) {
         //增强程序的健壮性：先判断购物车和地址簿是否有相应的数据
         Long addressBookId = ordersSubmitDTO.getAddressBookId();
         AddressBook address = addressBookMapper.getById(addressBookId);
@@ -423,24 +419,5 @@ public class OrderServiceImpl implements OrderService {
                 keys,
                 argv.toArray()
         );
-    }
-
-    @Override
-    public void sendOrderMessage(OrdersSubmitDTO orderSubmitDTO) {
-        OrderSubmitBaseDTO message = new OrderSubmitBaseDTO();
-        BeanUtils.copyProperties(orderSubmitDTO,message);
-        try {
-            // 将对象序列化为 JSON 字符串发送
-            String messageJson = JSON.toJSONString(message);
-
-            rabbitmqTemplate.convertAndSend(
-                    RabbitMQConfiguration.ORDER_EXCHANGE,
-                    RabbitMQConfiguration.ORDER_ROUTING_KEY,
-                    messageJson
-            );
-            System.out.println("消息发送成功: " + messageJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

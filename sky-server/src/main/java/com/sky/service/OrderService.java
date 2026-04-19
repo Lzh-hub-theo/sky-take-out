@@ -10,7 +10,7 @@ import com.sky.vo.OrderVO;
 import java.util.List;
 
 public interface OrderService {
-    OrderSubmitVO submit(OrdersSubmitDTO ordersSubmitDTO);
+    OrderSubmitVO submit(OrderSubmitBaseDTO orderSubmitBaseDTO);
 
     /**
      * 订单支付
@@ -66,7 +66,4 @@ public interface OrderService {
     String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params);
 
     String deductStock(List<CartItemDTO> orderItems);
-
-    void sendOrderMessage(OrdersSubmitDTO orderSubmitDTO);
-
 }

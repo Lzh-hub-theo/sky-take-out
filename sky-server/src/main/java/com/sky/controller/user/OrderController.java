@@ -2,6 +2,7 @@ package com.sky.controller.user;
 
 import com.sky.dto.*;
 import com.sky.exception.BaseException;
+import com.sky.mq.producer.OrderSubmitProducer;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
@@ -27,12 +28,14 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private OrderSubmitProducer orderSubmitProducer;
 
     /**
      * 用户下单
      *
-     * @param ordersSubmitDTO
-     * @return
+     * @param ordersSubmitDTO 提交订单请求类
+     * @return 暂时什么都不返回
      */
     @PostMapping("/submit")
     @ApiOperation("用户下单")
@@ -46,13 +49,11 @@ public class OrderController {
             case LACK_RESULT :
                 throw new BaseException("库存不足");
             case DEDUCT_SUCCESS_RESULT:
-                orderService.sendOrderMessage(ordersSubmitDTO);
+                orderSubmitProducer.sendOrderMessage(ordersSubmitDTO);
                 break;
             default:
                 throw new BaseException("未知的消息格式："+result);
         }
-//        OrderSubmitVO orderSubmitVO = orderService.submit(ordersSubmitDTO);
-//        return Result.success(orderSubmitVO);
         return Result.success();
     }
 
