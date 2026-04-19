@@ -27,4 +27,9 @@ public class OrderSubmitBaseDTO {
     private Integer packAmount;
     //总金额
     private BigDecimal amount;
+    /**
+     * 前端轮询请求的唯一标识
+     * 主要作用是把标识放在消息队列，消费者处理完成之后以标识作为缓存键存储在redis中
+     */
+    private String taskId;
 }

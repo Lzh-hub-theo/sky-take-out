@@ -20,7 +20,7 @@ public class DishStockLoader {
     private DishMapper dishMapper;
 
     @Autowired
-    private RedisTemplate<String, String> stockRedisTemplate;
+    private RedisTemplate<String, String> strRedisTemplate;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadStock(){
@@ -31,8 +31,8 @@ public class DishStockLoader {
                         entry -> String.valueOf(entry.getValue().getStock())
                 ));
 
-        stockRedisTemplate.opsForHash().putAll(DISH_STOCK_KEY, map);
-        stockRedisTemplate.expire(DISH_STOCK_KEY,1, TimeUnit.HOURS);
+        strRedisTemplate.opsForHash().putAll(DISH_STOCK_KEY, map);
+        strRedisTemplate.expire(DISH_STOCK_KEY,1, TimeUnit.HOURS);
     }
 
 }

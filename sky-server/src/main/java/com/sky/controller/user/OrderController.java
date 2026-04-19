@@ -1,24 +1,23 @@
 package com.sky.controller.user;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.sky.dto.*;
-import com.sky.exception.BaseException;
-import com.sky.mq.producer.OrderSubmitProducer;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderPaymentVO;
-import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
-import static com.sky.constant.OrderConstants.*;
+import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
 
 @RestController("userOrderController")
 @RequestMapping("/user/order")
@@ -29,7 +28,7 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
     @Autowired
-    private OrderSubmitProducer orderSubmitProducer;
+    private RedisTemplate<String, String> strRedisTemplate;
 
     /**
      * 用户下单
@@ -39,22 +38,10 @@ public class OrderController {
      */
     @PostMapping("/submit")
     @ApiOperation("用户下单")
-    public Result<OrderSubmitVO> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
+    public Result<String> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
         log.info("用户下单:{}", ordersSubmitDTO);
-        List<CartItemDTO> cartItems = ordersSubmitDTO.getCartItems();
-        String result = orderService.deductStock(cartItems);
-        switch (result){
-            case NO_DISH_RESULT :
-                throw new BaseException("无该商品");
-            case LACK_RESULT :
-                throw new BaseException("库存不足");
-            case DEDUCT_SUCCESS_RESULT:
-                orderSubmitProducer.sendOrderMessage(ordersSubmitDTO);
-                break;
-            default:
-                throw new BaseException("未知的消息格式："+result);
-        }
-        return Result.success();
+        String taskId = orderService.processOrders(ordersSubmitDTO);
+        return Result.needPoll(taskId);
     }
 
     /**
@@ -150,5 +137,13 @@ public class OrderController {
     public Result<String> getEstimatedDeliveryTime(@Valid EstimatedDeliveryTimeDTO params) {
         String estimatedTime = orderService.calculateEstimatedDeliveryTime(params);
         return Result.success(estimatedTime);
+    }
+
+    @GetMapping("/order/status/{taskId}")
+    public Result<Object> getOrderStatusResult(@PathVariable String taskId){
+        System.out.println("调试："+taskId);
+        String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
+        String resultString = strRedisTemplate.opsForValue().get(key);
+        return JSON.parseObject(resultString, new TypeReference<Result<Object>>() {});
     }
 }

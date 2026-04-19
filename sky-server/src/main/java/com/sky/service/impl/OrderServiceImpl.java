@@ -9,8 +9,10 @@ import com.sky.context.BaseContext;
 import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
+import com.sky.exception.BaseException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
+import com.sky.mq.producer.OrderSubmitProducer;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.BaiduGeoUtils;
@@ -21,7 +23,6 @@ import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import com.sky.webSocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -58,9 +59,13 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private WebSocketServer webSocketServer;
     @Autowired
-    private RedisTemplate<String, String> stockRedisTemplate;
+    private RedisTemplate<String, String> strRedisTemplate;
     @Autowired
     private DefaultRedisScript<String> stockScript;
+    @Autowired
+    private RedisTemplate<String, Object> jsonRedisTemplate;
+    @Autowired
+    private OrderSubmitProducer orderSubmitProducer;
 
     @Override
     @Transactional
@@ -76,6 +81,7 @@ public class OrderServiceImpl implements OrderService {
         baiduGeoUtils.checkOutOfRange(address.getCityName() + address.getDistrictName() + address.getDetail());
 
         Long userId = BaseContext.getCurrentId();
+        System.out.println("userId:"+userId);
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.getByShoppingCart(shoppingCart);
@@ -414,10 +420,27 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 3. 执行脚本
-        return stockRedisTemplate.execute(
+        return strRedisTemplate.execute(
                 stockScript,
                 keys,
                 argv.toArray()
         );
+    }
+
+    @Override
+    public String processOrders(OrdersSubmitDTO ordersSubmitDTO) {
+        List<CartItemDTO> cartItems = ordersSubmitDTO.getCartItems();
+        String result = this.deductStock(cartItems);
+        switch (result){
+            case NO_DISH_RESULT :
+                throw new BaseException("无该商品");
+            case LACK_RESULT :
+                throw new BaseException("库存不足");
+            case DEDUCT_SUCCESS_RESULT:
+                String taskId = orderSubmitProducer.sendOrderMessage(ordersSubmitDTO);
+                return taskId;
+            default:
+                throw new BaseException("未知的消息格式："+result);
+        }
     }
 }

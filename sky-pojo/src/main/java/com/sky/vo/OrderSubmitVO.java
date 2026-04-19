@@ -22,4 +22,6 @@ public class OrderSubmitVO implements Serializable {
     private BigDecimal orderAmount;
     //下单时间
     private LocalDateTime orderTime;
+    //订单处理状态：1 处理完成、 0 没处理完成
+    private Integer orderStatus;
 }

@@ -26,7 +26,7 @@ public class DishController {
     @Autowired
     DishService dishService;
     @Autowired
-    private RedisTemplate<String, List<DishVO>> jsonRedisTemplate;
+    private RedisTemplate<String, Object> jsonRedisTemplate;
 
     /**
      * 根据分类id查询菜品
@@ -39,7 +39,7 @@ public class DishController {
     public Result<List<DishVO>> queryByCategoryId(Long categoryId) {
         log.info("根据分类id查询菜品:{}", categoryId);
         String key = DISH_CATEGORY_PREFIX_KEY + categoryId;
-        List<DishVO> dishes = jsonRedisTemplate.opsForValue().get(key);
+        List<DishVO> dishes = (List<DishVO>) jsonRedisTemplate.opsForValue().get(key);
 
         if (dishes != null && dishes.size() > 0) {
             return Result.success(dishes);

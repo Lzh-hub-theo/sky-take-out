@@ -55,15 +55,15 @@ public class UserController {
     }
 
     @Autowired
-    private RedisTemplate<String, String> stockRedisTemplate;
+    private RedisTemplate<String, String> strRedisTemplate;
 
     @PostMapping("/test")
     public Result<Integer> testRedisOpsForHash(){
         String key = DISH_STOCK_KEY;
         String hashKey = String.valueOf(1);
-        stockRedisTemplate.opsForHash().put(key,hashKey,28);
-        Integer dishStock = (Integer) stockRedisTemplate.opsForHash().get(key, hashKey);
-        stockRedisTemplate.expire(key, 1, TimeUnit.HOURS);
+        strRedisTemplate.opsForHash().put(key,hashKey,28);
+        Integer dishStock = (Integer) strRedisTemplate.opsForHash().get(key, hashKey);
+        strRedisTemplate.expire(key, 1, TimeUnit.HOURS);
         return Result.success(dishStock);
     }
 }

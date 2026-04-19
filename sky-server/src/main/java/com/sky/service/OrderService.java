@@ -66,4 +66,6 @@ public interface OrderService {
     String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params);
 
     String deductStock(List<CartItemDTO> orderItems);
+
+    String processOrders(OrdersSubmitDTO ordersSubmitDTO);
 }
