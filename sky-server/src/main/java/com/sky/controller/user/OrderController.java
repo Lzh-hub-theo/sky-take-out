@@ -130,6 +130,7 @@ public class OrderController {
 
     /**
      * 获取预计送达时间
+     *
      * @param params 店铺ID和收货地址
      * @return 预计送达时间字符串 (格式: yyyy-MM-dd HH:mm:ss)
      */
@@ -140,10 +141,15 @@ public class OrderController {
     }
 
     @GetMapping("/order/status/{taskId}")
-    public Result<Object> getOrderStatusResult(@PathVariable String taskId){
-        System.out.println("调试："+taskId);
+    public Result<Object> getOrderStatusResult(@PathVariable String taskId) {
+        System.out.println("调试：" + taskId);
         String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
         String resultString = strRedisTemplate.opsForValue().get(key);
-        return JSON.parseObject(resultString, new TypeReference<Result<Object>>() {});
+        Result<Object> result = JSON.parseObject(resultString, new TypeReference<Result<Object>>() {
+        });
+        if (result != null && result.getCode() != 2) {
+            strRedisTemplate.delete(key);
+        }
+        return result;
     }
 }
