@@ -41,5 +41,7 @@ public interface DishMapper {
     Map<Long, DishStock> getDishStockMap();
 
     Boolean batchDeductStock(@Param("dishMap") Map<Long, Integer> dishMap);
+
+    Boolean batchDeductStockNoAdam(@Param("dishId") Long dishId, @Param("number") Integer number);
 }
 

@@ -62,6 +62,7 @@
     <select id="getDishStockMap" resultType="com.sky.entity.DishStock">
         select id as dishId, stock from dish
     </select>
+
     <update id="batchDeductStock" parameterType="map">
         UPDATE dish
         SET stock = CASE id
@@ -74,6 +75,10 @@
         <foreach collection="dishMap" index="dishId" item="number" open="(" separator=" OR " close=")">
             (id = #{dishId} AND stock >= #{number})
         </foreach>
+    </update>
+
+    <update id="batchDeductStockNoAdam">
+        update dish set stock = stock - #{number} where id = #{dishId} and stock >= #{number}
     </update>
 </mapper>
 
