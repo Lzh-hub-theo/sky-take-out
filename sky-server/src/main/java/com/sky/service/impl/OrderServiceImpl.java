@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.sky.constant.OrderConstants.*;
 import static com.sky.constant.RedisKeyConstant.DISH_STOCK_KEY;
@@ -63,9 +64,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private DefaultRedisScript<String> stockScript;
     @Autowired
-    private RedisTemplate<String, Object> jsonRedisTemplate;
-    @Autowired
     private OrderSubmitProducer orderSubmitProducer;
+    @Autowired
+    private DishMapper dishMapper;
 
     @Override
     @Transactional
@@ -76,16 +77,13 @@ public class OrderServiceImpl implements OrderService {
         if (address == null) {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
-
         //检查是否超出配送范围
         baiduGeoUtils.checkOutOfRange(address.getCityName() + address.getDistrictName() + address.getDetail());
 
         Long userId = BaseContext.getCurrentId();
-        System.out.println("userId:"+userId);
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setUserId(userId);
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.getByShoppingCart(shoppingCart);
-
         if (shoppingCartList == null || shoppingCartList.size() == 0) {
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
@@ -102,10 +100,10 @@ public class OrderServiceImpl implements OrderService {
         orders.setPhone(address.getPhone());
         orders.setAddress(address.getProvinceName() + address.getCityName() + address.getDistrictName() + address.getDetail());
         orders.setConsignee(address.getConsignee());
-
         orderMapper.insert(orders);
-        Long orderId = orders.getId();
 
+        //批量插入订单明细表
+        Long orderId = orders.getId();
         List<OrderDetail> list = new ArrayList<>();
         for (ShoppingCart sc : shoppingCartList) {
             OrderDetail detail = new OrderDetail();
@@ -119,8 +117,16 @@ public class OrderServiceImpl implements OrderService {
             detail.setImage(sc.getImage());
             list.add(detail);
         }
-
         orderDetailMapper.InsertBatch(list);
+
+        //批量扣减库存
+        Map<Long, Integer> dishMap = shoppingCartList.stream()
+                .collect(Collectors.toMap(
+                        ShoppingCart::getDishId,
+                        ShoppingCart::getNumber
+                ));
+        dishMapper.batchDeductStock(dishMap);
+
         //返回数据
         OrderSubmitVO orderSubmitVO = OrderSubmitVO.builder()
                 .id(orderId)
@@ -128,7 +134,6 @@ public class OrderServiceImpl implements OrderService {
                 .orderAmount(orders.getAmount())
                 .orderTime(orders.getOrderTime())
                 .build();
-
         return orderSubmitVO;
     }
 

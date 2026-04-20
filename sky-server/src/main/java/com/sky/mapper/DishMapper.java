@@ -8,6 +8,7 @@ import com.sky.enumeration.OperationType;
 import com.sky.vo.DishVO;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -38,5 +39,7 @@ public interface DishMapper {
 
     @MapKey("dishId")
     Map<Long, DishStock> getDishStockMap();
+
+    Boolean batchDeductStock(@Param("dishMap") Map<Long, Integer> dishMap);
 }
 
