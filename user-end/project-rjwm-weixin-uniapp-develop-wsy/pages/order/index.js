@@ -3,7 +3,7 @@ import {
 	submitOrderSubmit,
 	// 查询默认地址
 	getAddressBookDefault,
-	queryAddressBookList, getEstimatedDeliveryTime
+	queryAddressBookList, getEstimatedDeliveryTime, checkOrderStatus
 } from '../api/api.js'
 import {
 	mapState,
@@ -84,7 +84,8 @@ export default {
 			weeks: [],
 			scrollTop: 0,
 			addressList: [],
-			isHandlePy: false
+			isHandlePy: false,
+			pollTimer: null
 		}
 	},
 	computed: {
@@ -292,9 +293,9 @@ export default {
 				})
 				return false
 			}
-			
+
 			const cartItems = this.buildCartItems();
-			
+
 			const params = {
 				payMethod: 1,
 				addressBookId: this.addressBookId,
@@ -313,14 +314,13 @@ export default {
 			}
 
 			submitOrderSubmit(params).then(res => {
-				if (res.code === 1) {
-					this.isHandlePy = false
-					this.setOrderData(res.data)
-					this.setRemark('')
-
-					uni.navigateTo({
-						url: '/pages/pay/index?orderId=' + res.data.id
-					})
+				if (res.code === 2) {
+					const taskId = res.data;
+					if (!taskId) {
+						uni.showToast({ title: '缺少任务ID', icon: 'none' });
+						return;
+					}
+					this.pollingOrderStatus(taskId);
 				} else {
 					uni.showToast({
 						title: res.msg || '操作失败',
@@ -328,6 +328,43 @@ export default {
 					})
 				}
 			})
+		},
+		//轮询状态
+		pollingOrderStatus(taskId) {
+			if(this.pollTimer) {
+				clearInterval(this.pollTimer);
+				this.pollTimer = null;
+			}
+			this.pollTimer = setInterval(() => {
+				checkOrderStatus(taskId).then(res => {
+					if (res.code === 1) {
+						this.isHandlePy = false
+						this.setOrderData(res.data)
+						this.setRemark('')
+
+						uni.navigateTo({
+							url: '/pages/pay/index?orderId=' + res.data.id
+						})
+						this.stopPolling()
+					} else if (res.code !== 2) {
+						uni.showToast({
+							title: res.msg || '操作失败',
+							icon: 'none',
+						})
+						this.stopPolling()
+					}
+				})
+			}, 2000);
+		},
+		stopPolling() {
+			if(this.pollTimer) {
+				clearInterval(this.pollTimer);
+				this.pollTimer = null;
+			}
+		},
+		// 页面卸载时清除定时器（uni-app 生命周期）
+		onUnload() {
+			this.stopPolling();
 		},
 		// 拨打电话
 		call() {

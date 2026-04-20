@@ -24,7 +24,7 @@ export function request({url='', params={}, method='GET'}) {
 			method: method,
 			success: (res) => {
 				const { data } = res
-				if (data.code == 200 || data.code === 1) {
+				if (data.code == 200 || data.code === 1 || data.code === 2 || data.code === 0) {
 					// store.commit('setLodding', false)
 					resolve(res.data)
 				}else{

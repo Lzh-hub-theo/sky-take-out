@@ -213,6 +213,15 @@ export const submitOrderSubmit = (params) => {
 }
 
 
+// 查询订单状态
+export const checkOrderStatus = (params) => {
+	return request({
+		url: `/user/order/order/status/${params}`,
+		method: 'GET'
+	})
+}
+
+
 // 查询地址列表
 export const queryAddressBookList = (params) => {
 	return request({
