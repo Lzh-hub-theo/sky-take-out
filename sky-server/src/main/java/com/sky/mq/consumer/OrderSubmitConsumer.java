@@ -58,7 +58,7 @@ public class OrderSubmitConsumer {
         if (Boolean.TRUE.equals(isFirst)) {
             try {
                 idempotencyMapper.insert(messageId);
-                this.processOrder(new String(message.getBody()), userId);
+                this.processOrder(new String(message.getBody()), userId, messageId);
                 idempotencyMapper.update(messageId);
                 channel.basicAck(deliveryTag, false);
             } catch (DuplicateKeyException e) {
@@ -74,9 +74,8 @@ public class OrderSubmitConsumer {
         }
     }
 
-    private void processOrder(String messageJson, Long userId) {
+    private void processOrder(String messageJson, Long userId, String taskId) {
         OrderSubmitBaseDTO orderSubmitBaseDTO = JSON.parseObject(messageJson, OrderSubmitBaseDTO.class);
-        String taskId = orderSubmitBaseDTO.getTaskId();
         log.info("调试信息，收到订单消息。taskId : {}", taskId);
         String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
 

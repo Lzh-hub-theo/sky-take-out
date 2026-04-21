@@ -28,14 +28,13 @@ public class OrderSubmitProducer {
         OrderSubmitBaseDTO message = new OrderSubmitBaseDTO();
         BeanUtils.copyProperties(orderSubmitDTO,message);
         String taskId = UUID.randomUUID().toString();
-        message.setTaskId(taskId);
         try {
             // 设置请求头
             Long userId = BaseContext.getCurrentId();
             MessagePostProcessor messagePostProcessor = msg -> {
                 if(userId != null){
                     msg.getMessageProperties().setHeader(CONSUMER_ORDER_HEADER, userId);
-                    msg.getMessageProperties().setMessageId(UUID.randomUUID().toString());
+                    msg.getMessageProperties().setMessageId(taskId);
                 }
                 return msg;
             };
