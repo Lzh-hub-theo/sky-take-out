@@ -17,6 +17,10 @@ spring:
     port: ${sky.redis.port}
     password: ${sky.redis.password}
     database: ${sky.redis.database} # 默认0号数据库
+  rabbitmq:
+    listener:
+      simple:
+        acknowledge-mode: manual
 
 mybatis:
   #mapper配置文件

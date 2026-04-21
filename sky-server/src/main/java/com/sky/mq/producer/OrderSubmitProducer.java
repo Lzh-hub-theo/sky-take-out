@@ -35,6 +35,7 @@ public class OrderSubmitProducer {
             MessagePostProcessor messagePostProcessor = msg -> {
                 if(userId != null){
                     msg.getMessageProperties().setHeader(CONSUMER_ORDER_HEADER, userId);
+                    msg.getMessageProperties().setMessageId(UUID.randomUUID().toString());
                 }
                 return msg;
             };
@@ -46,6 +47,13 @@ public class OrderSubmitProducer {
                     messageJson,
                     messagePostProcessor
             );
+//            模拟重复投递
+//            rabbitmqTemplate.convertAndSend(
+//                    ORDER_EXCHANGE,
+//                    ORDER_ROUTING_KEY,
+//                    messageJson,
+//                    messagePostProcessor
+//            );
             System.out.println("消息发送成功: " + messageJson);
 
             // 存入缓存

@@ -236,3 +236,13 @@ CREATE TABLE `user`
   AUTO_INCREMENT = 4
   DEFAULT CHARSET = utf8mb3
   COLLATE = utf8_bin COMMENT ='用户信息';
+
+# 消息去重表
+CREATE TABLE mq_consume_log
+(
+    message_id  VARCHAR(64) NOT NULL COMMENT '全局唯一的消息ID',
+    status      TINYINT  DEFAULT 0 COMMENT '处理状态',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '处理时间',
+    PRIMARY KEY (message_id) -- 利用主键的唯一性来防重
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;

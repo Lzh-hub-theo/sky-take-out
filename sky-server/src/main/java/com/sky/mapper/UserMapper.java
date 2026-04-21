@@ -9,9 +9,9 @@ import java.util.Map;
 @Mapper
 public interface UserMapper {
     @Select("select * from user where openid = #{openid}")
-    public User selectUserByOpenId(String openid);
+    User selectUserByOpenId(String openid);
 
-    public void insert(User user);
+    void insert(User user);
 
     @Select("select * from user where id=#{userId}")
     User getById(Long userId);
