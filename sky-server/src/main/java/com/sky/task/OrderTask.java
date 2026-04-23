@@ -9,8 +9,10 @@ import com.sky.entity.Orders;
 import com.sky.mapper.MqReturnedMessageMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mq.producer.OrderSubmitProducer;
+import com.sky.result.Result;
 import com.sky.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.statement.select.KSQLWindow;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,8 +23,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.sky.constant.RedisKeyConstant.EXCEPTION_MESSAGE_KEY;
+import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
 
 @Component
 @Slf4j
@@ -87,6 +91,7 @@ public class OrderTask {
         Set<String> retryMessageSet = stringRedisTemplate.opsForZSet().range(EXCEPTION_MESSAGE_KEY, edge + 1, now);
 
         if(retryMessageSet!=null && !retryMessageSet.isEmpty()){
+            // 重新发送消息
             for(String message: retryMessageSet){
                 OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
                 Long userId = ordersSubmitBakDTO.getUserId();
@@ -99,6 +104,7 @@ public class OrderTask {
         if(expireMessageSet!=null && !expireMessageSet.isEmpty()){
             List<MqReturnedMessage> list = new ArrayList<>();
             for (String message:expireMessageSet){
+                // 拼接数据到列表中
                 OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
                 String messageId = ordersSubmitBakDTO.getMessageId();
                 MqReturnedMessage mqReturnedMessage = MqReturnedMessage.builder()
@@ -108,9 +114,16 @@ public class OrderTask {
                         .build();
                 list.add(mqReturnedMessage);
 
+                // 恢复缓存
                 List<CartItemDTO> cartItems = ordersSubmitBakDTO.getCartItems();
                 orderService.restoreCacheStock(cartItems);
+
+                // redis存入错误消息
+                String resultKey = ORDER_TASK_RESULT_PREFIX_KEY + messageId;
+                String jsonString = JSON.toJSONString(Result.error("π_π 下单失败，请重试"));
+                stringRedisTemplate.opsForValue().set(resultKey,jsonString,10, TimeUnit.MINUTES);
             }
+            // 批量删除缓存、批量插入数据库
             stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY,expireMessageSet.toArray());
             mqReturnedMessageMapper.insertBatch(list);
         }

@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.sky.dto.OrdersSubmitBakDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.MqReturnedMessage;
-import com.sky.exception.BaseException;
 import com.sky.mapper.MqReturnedMessageMapper;
 import com.sky.mq.correlation.CustomCorrelationData;
+import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.tools.RedisTool;
 import org.springframework.amqp.core.Binding;
@@ -19,8 +19,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.sky.constant.RabbitMQConstant.*;
 import static com.sky.constant.RedisKeyConstant.EXCEPTION_MESSAGE_KEY;
+import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
 
 @Configuration
 public class RabbitMQConfiguration {
@@ -46,24 +49,27 @@ public class RabbitMQConfiguration {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
                                          MqReturnedMessageMapper mqReturnedMessageMapper,
                                          OrderService orderService,
-                                         RedisTool redisTool, StringRedisTemplate stringRedisTemplate) {
+                                         RedisTool redisTool,
+                                         StringRedisTemplate stringRedisTemplate) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+            // 拿到回调信息中的消息
             CustomCorrelationData customCorrelationData = (CustomCorrelationData) correlationData;
             String messageId = customCorrelationData.getId();
+            Long userId = customCorrelationData.getUserId();
+            String jsonString = customCorrelationData.getJsonMessageBody();
+            OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(jsonString, OrdersSubmitBakDTO.class);
+            ordersSubmitBakDTO.setMessageId(messageId);
+            ordersSubmitBakDTO.setUserId(userId);
+            String processedString = JSON.toJSONString(ordersSubmitBakDTO);
             if (!ack) {
                 System.err.println("调试信息，消息发送到交换机失败：消息ID: " + messageId + "\n失败原因: " + cause);
-                String jsonString = customCorrelationData.getJsonMessageBody();
-                OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(jsonString, OrdersSubmitBakDTO.class);
-                Long userId = customCorrelationData.getUserId();
-                ordersSubmitBakDTO.setMessageId(messageId);
-                ordersSubmitBakDTO.setUserId(userId);
-                String processedString = JSON.toJSONString(ordersSubmitBakDTO);
                 long timeStamp = System.currentTimeMillis() / 1000;
-                redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY,timeStamp,processedString);
+                redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY, timeStamp, processedString);
             } else {
                 System.out.println("调试信息：消息成功到达交换机，消息ID: " + messageId);
+                stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString);
             }
         });
         rabbitTemplate.setReturnsCallback(returnedMessage -> {
@@ -84,7 +90,10 @@ public class RabbitMQConfiguration {
                     .build();
             mqReturnedMessageMapper.insert(mqReturnedMessage);
 
-            throw new BaseException("下单失败，无法路由到消息队列");
+            // 返回下单失败
+            String resultKey = ORDER_TASK_RESULT_PREFIX_KEY + messageId;
+            jsonString = JSON.toJSONString(Result.error("下单失败，请重试"));
+            stringRedisTemplate.opsForValue().set(resultKey,jsonString,10, TimeUnit.MINUTES);
         });
         return rabbitTemplate;
     }
