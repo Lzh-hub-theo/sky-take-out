@@ -17,4 +17,14 @@ public class DefaultRedisScriptConfiguration {
         stockScript.setResultType(String.class);
         return stockScript;
     }
+
+    @Bean
+    public DefaultRedisScript<String> restoreStockScript(){
+        DefaultRedisScript<String> restoreStockScript = new DefaultRedisScript<>();
+        restoreStockScript.setScriptSource(new ResourceScriptSource(
+                new ClassPathResource("lua/restore_stock.lua")
+        ));
+        restoreStockScript.setResultType(String.class);
+        return restoreStockScript;
+    }
 }

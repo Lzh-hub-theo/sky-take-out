@@ -6,6 +6,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.List;
 
@@ -65,7 +66,9 @@ public interface OrderService {
 
     String calculateEstimatedDeliveryTime(EstimatedDeliveryTimeDTO params);
 
-    String deductStock(List<CartItemDTO> orderItems);
+    String modifyCacheStock(List<CartItemDTO> orderItems, DefaultRedisScript<String> script);
 
     String processOrders(OrdersSubmitDTO ordersSubmitDTO);
+
+    String restoreCacheStock(List<CartItemDTO> orderItems);
 }

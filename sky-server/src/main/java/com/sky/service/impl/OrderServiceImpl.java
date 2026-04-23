@@ -25,6 +25,7 @@ import com.sky.webSocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,11 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private RedisTemplate<String, String> strRedisTemplate;
     @Autowired
+    @Qualifier("stockScript")
     private DefaultRedisScript<String> stockScript;
+    @Autowired
+    @Qualifier("restoreStockScript")
+    private DefaultRedisScript<String> restoreStockScript;
     @Autowired
     private OrderSubmitProducer orderSubmitProducer;
     @Autowired
@@ -412,7 +417,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public String deductStock(List<CartItemDTO> orderItems) {
+    public String modifyCacheStock(List<CartItemDTO> orderItems, DefaultRedisScript<String> script) {
         // 1. 准备 KEYS 参数
         List<String> keys = new ArrayList<>();
         keys.add(DISH_STOCK_KEY);
@@ -426,16 +431,21 @@ public class OrderServiceImpl implements OrderService {
 
         // 3. 执行脚本
         return strRedisTemplate.execute(
-                stockScript,
+                script,
                 keys,
                 argv.toArray()
         );
     }
 
     @Override
+    public String restoreCacheStock(List<CartItemDTO> orderItems) {
+        return this.modifyCacheStock(orderItems, restoreStockScript);
+    }
+
+    @Override
     public String processOrders(OrdersSubmitDTO ordersSubmitDTO) {
         List<CartItemDTO> cartItems = ordersSubmitDTO.getCartItems();
-        String result = this.deductStock(cartItems);
+        String result = this.modifyCacheStock(cartItems, stockScript);
         switch (result){
             case NO_DISH_RESULT :
                 throw new BaseException("无该商品");

@@ -246,3 +246,19 @@ CREATE TABLE mq_consume_log
     PRIMARY KEY (message_id) -- 利用主键的唯一性来防重
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+# 消息路由失败表
+CREATE TABLE `mq_returned_message`
+(
+    `id`           bigint   NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `message_id`   varchar(64)           DEFAULT NULL COMMENT 'RabbitMQ消息ID',
+    `exchange`     varchar(128) NOT NULL COMMENT '发送时的交换机名称',
+    `routing_key`  varchar(128) NOT NULL COMMENT '发送时的路由键',
+    `reply_code`   int  NOT NULL COMMENT '返回码 (如 312)',
+    `reply_text`   varchar(512)          DEFAULT NULL COMMENT '返回描述 (如 NO_ROUTE)',
+    `message_body` text COMMENT '消息体内容 (用于排查数据或重试)',
+    `create_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_message_id` (`message_id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='MQ投递失败消息记录表';
