@@ -95,6 +95,8 @@ public class RabbitMQConfiguration {
             jsonString = JSON.toJSONString(Result.error("下单失败，请重试"));
             stringRedisTemplate.opsForValue().set(resultKey,jsonString,10, TimeUnit.MINUTES);
         });
+
+        rabbitTemplate.setMandatory(true);
         return rabbitTemplate;
     }
 }

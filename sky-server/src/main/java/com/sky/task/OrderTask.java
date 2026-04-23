@@ -65,11 +65,8 @@ public class OrderTask {
      * 处理派送中的异常订单
      */
     @Scheduled(cron = "0 0 1 * * ?")//每天凌晨一点触发一次
-    //@Scheduled(cron = "0/5 * * * * ?")//调试用的
     public void processDeliveringOrder() {
         log.info("处理派送中的异常订单");
-        //update orders set status = complete where status = delivery
-        //orderMapper.updateStatusToFinish();
 
         //查询上一天的订单
         LocalDateTime time = LocalDateTime.now().plusMinutes(-60);
@@ -86,9 +83,9 @@ public class OrderTask {
         long edge = now - 180;
 
         // 3分钟前的所有数据
-        Set<String> expireMessageSet = stringRedisTemplate.opsForZSet().range(EXCEPTION_MESSAGE_KEY,0,edge);
+        Set<String> expireMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY,0,edge);
         // 3分钟以内的所有数据
-        Set<String> retryMessageSet = stringRedisTemplate.opsForZSet().range(EXCEPTION_MESSAGE_KEY, edge + 1, now);
+        Set<String> retryMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY, edge + 1, now);
 
         if(retryMessageSet!=null && !retryMessageSet.isEmpty()){
             // 重新发送消息

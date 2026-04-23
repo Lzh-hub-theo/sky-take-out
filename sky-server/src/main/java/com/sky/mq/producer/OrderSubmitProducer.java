@@ -5,6 +5,7 @@ import com.sky.context.BaseContext;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.exception.BaseException;
 import com.sky.mq.correlation.CustomCorrelationData;
+import com.sky.result.Result;
 import com.sky.vo.OrderSubmitVO;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -63,6 +64,22 @@ public class OrderSubmitProducer {
                 messagePostProcessor,
                 correlationData
         );
+//        // 模拟无法到达交换机
+//        rabbitmqTemplate.convertAndSend(
+//                "fake_exchange",
+//                ORDER_ROUTING_KEY,
+//                messageJson,
+//                messagePostProcessor,
+//                correlationData
+//        );
+//        // 模拟交换机无法到达消息队列
+//        rabbitmqTemplate.convertAndSend(
+//                ORDER_EXCHANGE,
+//                "fake_routing_key",
+//                messageJson,
+//                messagePostProcessor,
+//                correlationData
+//        );
         System.out.println("消息发送成功: " + messageJson);
 
     }
@@ -72,7 +89,8 @@ public class OrderSubmitProducer {
         OrderSubmitVO orderSubmitVO = OrderSubmitVO.builder()
                 .orderStatus(0)
                 .build();
-        String orderSubmitVOString = JSON.toJSONString(orderSubmitVO);
-        strRedisTemplate.opsForValue().set(pollKey, orderSubmitVOString, 10, TimeUnit.MINUTES);
+        Result<OrderSubmitVO> result = Result.needPoll(orderSubmitVO);
+        String resultString = JSON.toJSONString(result);
+        strRedisTemplate.opsForValue().set(pollKey, resultString, 10, TimeUnit.MINUTES);
     }
 }

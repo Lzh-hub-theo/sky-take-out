@@ -4,8 +4,8 @@
     <insert id="insertBatch">
         insert into mq_returned_message(message_id, exchange, routing_key, reply_code, reply_text, message_body)
         VALUES
-            <foreach collection="mqReturnedMessageList" item="message" open="(" separator="," close=")">
-                (#{message.messsageId},'无法路由到交换机','无法路由到交换机',1000,#{message.replyText},#{message.messageBody})
+            <foreach collection="mqReturnedMessagesList" item="message" separator=",">
+                (#{message.messageId},'无法路由到交换机','无法路由到交换机',1000,#{message.replyText},#{message.messageBody})
             </foreach>
     </insert>
 </mapper>
