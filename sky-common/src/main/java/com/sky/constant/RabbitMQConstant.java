@@ -6,5 +6,8 @@ public final class RabbitMQConstant {
     public static final String ORDER_QUEUE = "order.submit.queue";
     public static final String ORDER_EXCHANGE = "order.exchange";
     public static final String ORDER_ROUTING_KEY = "order.submit.key";
+    public static final String DEAD_LETTER_QUEUE = "order.submit.dlq";
+    public static final String DEAD_LETTER_EXCHANGE = "order.dlx";
+    public static final String DEAD_LETTER_ROUTING_KEY = "order.dl.key";
     public static final String CONSUMER_ORDER_HEADER = "user_id";
 }

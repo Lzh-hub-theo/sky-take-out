@@ -47,30 +47,35 @@ public class OrderSubmitConsumer {
         String messageId = message.getMessageProperties().getMessageId();
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         if (messageId == null) {
+            // 缺少消息ID直接交给死信队列
             log.error("调试信息：消息缺少 messageId");
-            channel.basicAck(deliveryTag, false);
+            channel.basicNack(deliveryTag, false, false);
             return;
         }
 
         String deduplicateKey = DEDUPLICATE_PREFIX_KEY + messageId;
-        Boolean isFirst = strRedisTemplate.opsForValue().setIfAbsent(deduplicateKey, "1", TTL);
+        Boolean isFirst = strRedisTemplate.opsForValue().setIfAbsent(deduplicateKey, "0", TTL);
+        String status = strRedisTemplate.opsForValue().get(deduplicateKey);
 
-        if (Boolean.TRUE.equals(isFirst)) {
+        // redis拦截处理过的消息
+        if (Boolean.FALSE.equals(isFirst) && "1".equals(status)) {
+            log.warn("调试信息，根据幂等性，Redis 拦截消费过的消息: {}", messageId);
+            channel.basicAck(deliveryTag, false);
+        } else {
             try {
+                // 数据库拦截处理过的消息
                 idempotencyMapper.insert(messageId);
                 this.processOrder(new String(message.getBody()), userId, messageId);
                 idempotencyMapper.update(messageId);
                 channel.basicAck(deliveryTag, false);
+                strRedisTemplate.opsForValue().setIfAbsent(deduplicateKey, "1", TTL);
             } catch (DuplicateKeyException e) {
-                log.warn("调试信息：消息已处理：{}", messageId);
+                log.warn("调试信息：根据幂等性，数据库唯一键 拦截消费过的消息：{}", messageId);
                 channel.basicAck(deliveryTag, false);
             } catch (Exception e) {
                 log.error("调试信息：业务处理失败: ", e);
                 channel.basicNack(deliveryTag, false, true);
             }
-        } else {
-            log.warn("调试信息，Redis 拦截重复消息: {}", messageId);
-            channel.basicAck(deliveryTag, false);
         }
     }
 

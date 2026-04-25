@@ -18,13 +18,20 @@ spring:
     password: ${sky.redis.password}
     database: ${sky.redis.database} # 默认0号数据库
   rabbitmq:
-    listener:
-      simple:
-        acknowledge-mode: manual
     publisher-confirm-type: correlated
     publisher-returns: true
     template:
       mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+          multiplier: 2.0
+          max-interval: 10000
 
 mybatis:
   #mapper配置文件

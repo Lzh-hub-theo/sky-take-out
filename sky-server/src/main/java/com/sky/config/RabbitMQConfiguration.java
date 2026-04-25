@@ -9,10 +9,7 @@ import com.sky.mq.correlation.CustomCorrelationData;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.tools.RedisTool;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
@@ -29,8 +26,11 @@ import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
 public class RabbitMQConfiguration {
     @Bean
     public Queue orderQueue() {
-        boolean durable = true;
-        return new Queue(ORDER_QUEUE, durable);
+        return QueueBuilder.durable(ORDER_QUEUE)
+                .withArgument("x-message-ttl", 60000)
+                .withArgument("x-dead-letter-exchange", DEAD_LETTER_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DEAD_LETTER_ROUTING_KEY)
+                .build();
     }
 
     @Bean
@@ -43,6 +43,24 @@ public class RabbitMQConfiguration {
         return BindingBuilder.bind(orderQueue())
                 .to(orderExchange())
                 .with(ORDER_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue dlq() {
+        return QueueBuilder.durable(DEAD_LETTER_QUEUE)
+                .build();
+    }
+
+    @Bean
+    public DirectExchange dlx() {
+        return new DirectExchange(DEAD_LETTER_EXCHANGE);
+    }
+
+    @Bean
+    public Binding deadLetterBinding() {
+        return BindingBuilder.bind(dlq())
+                .to(dlx())
+                .with(DEAD_LETTER_ROUTING_KEY);
     }
 
     @Bean
@@ -72,6 +90,7 @@ public class RabbitMQConfiguration {
                 stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString);
             }
         });
+
         rabbitTemplate.setReturnsCallback(returnedMessage -> {
             // 恢复库存
             String messageId = returnedMessage.getMessage().getMessageProperties().getMessageId();
