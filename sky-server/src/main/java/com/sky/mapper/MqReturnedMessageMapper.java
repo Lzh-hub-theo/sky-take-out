@@ -3,6 +3,7 @@ package com.sky.mapper;
 import com.sky.entity.MqReturnedMessage;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,5 +14,5 @@ public interface MqReturnedMessageMapper {
             "VALUES (#{messageId}, #{exchange}, #{routingKey}, #{replyCode}, #{replyText}, #{messageBody})")
     boolean insert(MqReturnedMessage mqReturnedMessage);
 
-    boolean insertBatch(List<MqReturnedMessage> mqReturnedMessagesList);
+    boolean insertBatch(@Param("mqReturnedMessagesList") List<MqReturnedMessage> mqReturnedMessagesList);
 }

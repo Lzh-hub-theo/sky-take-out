@@ -5,6 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrderSubmitBaseDTO;
 import com.sky.mapper.IdempotencyMapper;
+import com.sky.mq.producer.OrderSubmitProducer;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderSubmitVO;
@@ -22,10 +23,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static com.sky.constant.RabbitMQConstant.CONSUMER_ORDER_HEADER;
-import static com.sky.constant.RabbitMQConstant.ORDER_QUEUE;
-import static com.sky.constant.RedisKeyConstant.DEDUPLICATE_PREFIX_KEY;
-import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
+import static com.sky.constant.RabbitMQConstant.*;
+import static com.sky.constant.RedisKeyConstant.*;
 
 @Component
 @Slf4j
@@ -36,7 +35,11 @@ public class OrderSubmitConsumer {
     @Autowired
     private RedisTemplate<String, String> strRedisTemplate;
     @Autowired
+    private RedisTemplate<String, Integer> redisTemplate;
+    @Autowired
     private IdempotencyMapper idempotencyMapper;
+    @Autowired
+    private OrderSubmitProducer orderSubmitProducer;
 
     private static final Duration TTL = Duration.ofMinutes(10);
 
@@ -62,7 +65,9 @@ public class OrderSubmitConsumer {
             log.warn("调试信息，根据幂等性，Redis 拦截消费过的消息: {}", messageId);
             channel.basicAck(deliveryTag, false);
         } else {
+            String retryKey = ORDER_QUEUE_RETRY_KEY + messageId;
             try {
+                redisTemplate.opsForValue().setIfAbsent(retryKey, -1, TTL);
                 // 数据库拦截处理过的消息
                 idempotencyMapper.insert(messageId);
                 this.processOrder(new String(message.getBody()), userId, messageId);
@@ -74,12 +79,20 @@ public class OrderSubmitConsumer {
                 channel.basicAck(deliveryTag, false);
             } catch (Exception e) {
                 log.error("调试信息：业务处理失败: ", e);
-                channel.basicNack(deliveryTag, false, true);
+                Long retryCount = redisTemplate.opsForValue().increment(retryKey);
+                if (retryCount > 3) {
+                    channel.basicNack(deliveryTag, false, false);
+                } else {
+                    orderSubmitProducer.sendMessage(userId, messageId, message);
+                    channel.basicAck(deliveryTag, false);
+                }
+                throw new RuntimeException("消息消费失败", e);
             }
         }
     }
 
-    private void processOrder(String messageJson, Long userId, String taskId) {
+    private void processOrder(String messageJson, Long userId, String taskId) throws ArithmeticException {
+//        int i = 1 / 0; // 模拟消息进入死信队列
         OrderSubmitBaseDTO orderSubmitBaseDTO = JSON.parseObject(messageJson, OrderSubmitBaseDTO.class);
         log.info("调试信息，收到订单消息。taskId : {}", taskId);
         String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;

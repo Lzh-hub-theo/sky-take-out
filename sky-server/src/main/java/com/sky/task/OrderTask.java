@@ -105,9 +105,12 @@ public class OrderTask {
                 OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
                 String messageId = ordersSubmitBakDTO.getMessageId();
                 MqReturnedMessage mqReturnedMessage = MqReturnedMessage.builder()
-                        .messageBody(message)
                         .messageId(messageId)
+                        .exchange("无法路由到交换机")
+                        .routingKey("无法路由到交换机")
+                        .replyCode(1000)
                         .replyText("无法访问到消息队列交换机")
+                        .messageBody(message)
                         .build();
                 list.add(mqReturnedMessage);
 

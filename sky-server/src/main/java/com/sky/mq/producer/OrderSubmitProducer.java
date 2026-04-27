@@ -84,6 +84,29 @@ public class OrderSubmitProducer {
 
     }
 
+    public void sendMessage(Long userId, String messageId, Message message){
+        // 设置请求头
+        MessagePostProcessor messagePostProcessor = msg -> {
+            msg.getMessageProperties().setHeader(CONSUMER_ORDER_HEADER, userId);
+            msg.getMessageProperties().setMessageId(messageId);
+            return msg;
+        };
+
+        String messageJson = new String(message.getBody());
+
+        // 设置 messageId 到 CorrelationData
+        CustomCorrelationData correlationData = new CustomCorrelationData(messageId, userId, messageJson);
+
+        rabbitmqTemplate.convertAndSend(
+                ORDER_EXCHANGE,
+                ORDER_ROUTING_KEY,
+                messageJson,
+                messagePostProcessor,
+                correlationData
+        );
+        System.out.println("消息发送成功: " + messageJson);
+    }
+
     private void saveResultToCache(String taskId) {
         String pollKey = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
         OrderSubmitVO orderSubmitVO = OrderSubmitVO.builder()
