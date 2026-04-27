@@ -27,11 +27,13 @@ spring:
         acknowledge-mode: manual
         prefetch: 1
         retry:
-          enabled: true
-          max-attempts: 3
-          initial-interval: 1000
-          multiplier: 2.0
-          max-interval: 10000
+          enabled: false
+      custom:
+        dlq:
+          prefetch: 20
+          batch-size: 20
+        mq:
+          prefetch: 1
 
 mybatis:
   #mapper配置文件
