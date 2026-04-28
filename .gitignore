@@ -15,3 +15,5 @@ user-end/$RECYCLE.BIN/
 user-end/# Node.js
 user-end/node_modules/
 Jmeter-test/
+
+compare/
