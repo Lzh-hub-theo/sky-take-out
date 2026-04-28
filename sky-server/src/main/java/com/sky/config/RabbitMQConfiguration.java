@@ -115,7 +115,7 @@ public class RabbitMQConfiguration {
                 long timeStamp = System.currentTimeMillis() / 1000;
                 redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY, timeStamp, processedString);
             } else {
-                System.out.println("调试信息：消息成功到达交换机，消息ID: " + messageId);
+//                System.out.println("调试信息：消息成功到达交换机，消息ID: " + messageId);
                 stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString);
             }
         });

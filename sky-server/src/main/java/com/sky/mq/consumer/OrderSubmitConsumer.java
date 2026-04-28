@@ -51,7 +51,7 @@ public class OrderSubmitConsumer {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         if (messageId == null) {
             // 缺少消息ID直接交给死信队列
-            log.error("调试信息：消息缺少 messageId");
+//            log.error("调试信息：消息缺少 messageId");
             channel.basicNack(deliveryTag, false, false);
             return;
         }
@@ -62,7 +62,7 @@ public class OrderSubmitConsumer {
 
         // redis拦截处理过的消息
         if (Boolean.FALSE.equals(isFirst) && "1".equals(status)) {
-            log.warn("调试信息，根据幂等性，Redis 拦截消费过的消息: {}", messageId);
+//            log.warn("调试信息，根据幂等性，Redis 拦截消费过的消息: {}", messageId);
             channel.basicAck(deliveryTag, false);
         } else {
             String retryKey = ORDER_QUEUE_RETRY_KEY + messageId;
@@ -75,10 +75,10 @@ public class OrderSubmitConsumer {
                 channel.basicAck(deliveryTag, false);
                 strRedisTemplate.opsForValue().setIfAbsent(deduplicateKey, "1", TTL);
             } catch (DuplicateKeyException e) {
-                log.warn("调试信息：根据幂等性，数据库唯一键 拦截消费过的消息：{}", messageId);
+//                log.warn("调试信息：根据幂等性，数据库唯一键 拦截消费过的消息：{}", messageId);
                 channel.basicAck(deliveryTag, false);
             } catch (Exception e) {
-                log.error("调试信息：业务处理失败: ", e);
+//                log.error("调试信息：业务处理失败: ", e);
                 Long retryCount = redisTemplate.opsForValue().increment(retryKey);
                 if (retryCount > 3) {
                     channel.basicNack(deliveryTag, false, false);
@@ -94,7 +94,7 @@ public class OrderSubmitConsumer {
     private void processOrder(String messageJson, Long userId, String taskId) throws ArithmeticException {
 //        int i = 1 / 0; // 模拟消息进入死信队列
         OrderSubmitBaseDTO orderSubmitBaseDTO = JSON.parseObject(messageJson, OrderSubmitBaseDTO.class);
-        log.info("调试信息，收到订单消息。taskId : {}", taskId);
+//        log.info("调试信息，收到订单消息。taskId : {}", taskId);
         String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
 
         if (userId == null) {

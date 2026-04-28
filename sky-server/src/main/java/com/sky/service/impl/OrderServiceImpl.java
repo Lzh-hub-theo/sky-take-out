@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -74,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
     private DishMapper dishMapper;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public OrderSubmitVO submit(OrderSubmitBaseDTO ordersSubmitDTO) {
         //增强程序的健壮性：先判断购物车和地址簿是否有相应的数据
         Long addressBookId = ordersSubmitDTO.getAddressBookId();
@@ -83,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
         //检查是否超出配送范围
-        baiduGeoUtils.checkOutOfRange(address.getCityName() + address.getDistrictName() + address.getDetail());
+//        baiduGeoUtils.checkOutOfRange(address.getCityName() + address.getDistrictName() + address.getDetail());
 
         Long userId = BaseContext.getCurrentId();
         ShoppingCart shoppingCart = new ShoppingCart();

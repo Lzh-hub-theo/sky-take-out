@@ -142,7 +142,7 @@ public class OrderController {
 
     @GetMapping("/order/status/{taskId}")
     public Result<Object> getOrderStatusResult(@PathVariable String taskId) {
-        System.out.println("调试：" + taskId);
+//        System.out.println("调试：" + taskId);
         String key = ORDER_TASK_RESULT_PREFIX_KEY + taskId;
         String resultString = strRedisTemplate.opsForValue().get(key);
         Result<Object> result = JSON.parseObject(resultString, new TypeReference<Result<Object>>() {

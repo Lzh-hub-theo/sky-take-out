@@ -27,29 +27,46 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
      * @return
      * @throws Exception
      */
+//    @Override
+//    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+//        /*if(handler instanceof HandlerMethod){
+//            return true;
+//        }*/
+//
+//        //请求头中获取令牌
+//        String token = request.getHeader(jwtProperties.getUserTokenName());
+//
+//        //解析令牌并把用户id放入ThreadLocal中
+//        try {
+//            log.info("校验令牌:{}",token);
+//
+//            Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
+//            Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
+//            log.info("用户id:{}",userId);
+//            BaseContext.setCurrentId(userId);
+//            return true;
+//        } catch (Exception e) {
+//            response.setStatus(401);
+//            return false;
+//        }
+//        //return HandlerInterceptor.super.preHandle(request, response, handler);
+//    }
+
+    /**
+     * 模拟多个用户高并发
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        /*if(handler instanceof HandlerMethod){
-            return true;
-        }*/
-
-        //请求头中获取令牌
-        String token = request.getHeader(jwtProperties.getUserTokenName());
-
-        //解析令牌并把用户id放入ThreadLocal中
         try {
-            log.info("校验令牌:{}",token);
-
-            Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
-            Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
-            log.info("用户id:{}",userId);
+            String userIdStr = request.getHeader(jwtProperties.getUserTokenName());
+            Long userId = Long.valueOf(userIdStr);
             BaseContext.setCurrentId(userId);
+//            log.info("调试信息：userId:{}",userId);
             return true;
         } catch (Exception e) {
             response.setStatus(401);
             return false;
         }
-        //return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 
     @Override
