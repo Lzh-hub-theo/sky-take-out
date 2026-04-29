@@ -77,56 +77,56 @@ public class OrderTask {
         orderMapper.updateByStatusAndOrderTimeLT(orders, Orders.DELIVERY_IN_PROGRESS, time);
     }
 
-    @Scheduled(cron = "0 0/1 * * * ?")
-    public void resendOrderMessage() {
-        long now = System.currentTimeMillis() / 1000;
-        long edge = now - 180;
-
-        // 3分钟前的所有数据
-        Set<String> expireMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY,0,edge);
-        // 3分钟以内的所有数据
-        Set<String> retryMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY, edge + 1, now);
-
-        if(retryMessageSet!=null && !retryMessageSet.isEmpty()){
-            // 重新发送消息
-            for(String message: retryMessageSet){
-                OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
-                Long userId = ordersSubmitBakDTO.getUserId();
-                String messageId = ordersSubmitBakDTO.getMessageId();
-                OrdersSubmitDTO ordersSubmitDTO = new OrdersSubmitDTO();
-                BeanUtils.copyProperties(ordersSubmitBakDTO,ordersSubmitDTO);
-                orderSubmitProducer.sendMessage(userId,messageId,ordersSubmitDTO);
-            }
-        }
-        if(expireMessageSet!=null && !expireMessageSet.isEmpty()){
-            List<MqReturnedMessage> list = new ArrayList<>();
-            for (String message:expireMessageSet){
-                // 拼接数据到列表中
-                OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
-                String messageId = ordersSubmitBakDTO.getMessageId();
-                MqReturnedMessage mqReturnedMessage = MqReturnedMessage.builder()
-                        .messageId(messageId)
-                        .exchange("无法路由到交换机")
-                        .routingKey("无法路由到交换机")
-                        .replyCode(1000)
-                        .replyText("无法访问到消息队列交换机")
-                        .messageBody(message)
-                        .build();
-                list.add(mqReturnedMessage);
-
-                // 恢复缓存
-                List<CartItemDTO> cartItems = ordersSubmitBakDTO.getCartItems();
-                orderService.restoreCacheStock(cartItems);
-
-                // redis存入错误消息
-                String resultKey = ORDER_TASK_RESULT_PREFIX_KEY + messageId;
-                String jsonString = JSON.toJSONString(Result.error("π_π 下单失败，请重试"));
-                stringRedisTemplate.opsForValue().set(resultKey,jsonString,10, TimeUnit.MINUTES);
-            }
-            // 批量删除缓存、批量插入数据库
-            stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY,expireMessageSet.toArray());
-            mqReturnedMessageMapper.insertBatch(list);
-        }
-
-    }
+//    @Scheduled(cron = "0 0/1 * * * ?")
+//    public void resendOrderMessage() {
+//        long now = System.currentTimeMillis() / 1000;
+//        long edge = now - 180;
+//
+//        // 3分钟前的所有数据
+//        Set<String> expireMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY,0,edge);
+//        // 3分钟以内的所有数据
+//        Set<String> retryMessageSet = stringRedisTemplate.opsForZSet().rangeByScore(EXCEPTION_MESSAGE_KEY, edge + 1, now);
+//
+//        if(retryMessageSet!=null && !retryMessageSet.isEmpty()){
+//            // 重新发送消息
+//            for(String message: retryMessageSet){
+//                OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
+//                Long userId = ordersSubmitBakDTO.getUserId();
+//                String messageId = ordersSubmitBakDTO.getMessageId();
+//                OrdersSubmitDTO ordersSubmitDTO = new OrdersSubmitDTO();
+//                BeanUtils.copyProperties(ordersSubmitBakDTO,ordersSubmitDTO);
+//                orderSubmitProducer.sendMessage(userId,messageId,ordersSubmitDTO);
+//            }
+//        }
+//        if(expireMessageSet!=null && !expireMessageSet.isEmpty()){
+//            List<MqReturnedMessage> list = new ArrayList<>();
+//            for (String message:expireMessageSet){
+//                // 拼接数据到列表中
+//                OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(message, OrdersSubmitBakDTO.class);
+//                String messageId = ordersSubmitBakDTO.getMessageId();
+//                MqReturnedMessage mqReturnedMessage = MqReturnedMessage.builder()
+//                        .messageId(messageId)
+//                        .exchange("无法路由到交换机")
+//                        .routingKey("无法路由到交换机")
+//                        .replyCode(1000)
+//                        .replyText("无法访问到消息队列交换机")
+//                        .messageBody(message)
+//                        .build();
+//                list.add(mqReturnedMessage);
+//
+//                // 恢复缓存
+//                List<CartItemDTO> cartItems = ordersSubmitBakDTO.getCartItems();
+//                orderService.restoreCacheStock(cartItems);
+//
+//                // redis存入错误消息
+//                String resultKey = ORDER_TASK_RESULT_PREFIX_KEY + messageId;
+//                String jsonString = JSON.toJSONString(Result.error("π_π 下单失败，请重试"));
+//                stringRedisTemplate.opsForValue().set(resultKey,jsonString,10, TimeUnit.MINUTES);
+//            }
+//            // 批量删除缓存、批量插入数据库
+//            stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY,expireMessageSet.toArray());
+//            mqReturnedMessageMapper.insertBatch(list);
+//        }
+//
+//    }
 }

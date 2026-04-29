@@ -65,6 +65,7 @@ public class OrderSubmitProducer {
 
         rabbitmqTemplate.convertAndSend(
                 ORDER_EXCHANGE,
+//                "fake",
                 ORDER_ROUTING_KEY,
                 messageJson,
                 messagePostProcessor,

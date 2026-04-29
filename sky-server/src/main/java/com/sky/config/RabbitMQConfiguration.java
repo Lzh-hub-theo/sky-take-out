@@ -1,9 +1,9 @@
 package com.sky.config;
 
 import com.alibaba.fastjson.JSON;
-import com.sky.dto.OrdersSubmitBakDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.MqReturnedMessage;
+import com.sky.handler.MessageExceptionHandler;
 import com.sky.mapper.MqReturnedMessageMapper;
 import com.sky.mq.correlation.CustomCorrelationData;
 import com.sky.properties.RabbitMQProperties;
@@ -99,32 +99,17 @@ public class RabbitMQConfiguration {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
                                          MqReturnedMessageMapper mqReturnedMessageMapper,
                                          OrderService orderService,
-                                         RedisTool redisTool,
                                          StringRedisTemplate stringRedisTemplate,
-                                         @Qualifier("orderAsyncExecutor")Executor asyncExecutor) {
+                                         @Qualifier("orderAsyncExecutor")Executor asyncExecutor,
+                                         MessageExceptionHandler exceptionHandler) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
-            // 拿到回调信息中的消息
-            CustomCorrelationData customCorrelationData = (CustomCorrelationData) correlationData;
-            String messageId = customCorrelationData.getId();
-            Long userId = customCorrelationData.getUserId();
-            String jsonString = customCorrelationData.getJsonMessageBody();
-            OrdersSubmitBakDTO ordersSubmitBakDTO = JSON.parseObject(jsonString, OrdersSubmitBakDTO.class);
-            ordersSubmitBakDTO.setMessageId(messageId);
-            ordersSubmitBakDTO.setUserId(userId);
-            String processedString = JSON.toJSONString(ordersSubmitBakDTO);
             if (!ack) {
-//                System.err.println("调试信息，消息发送到交换机失败：消息ID: " + messageId + "\n失败原因: " + cause);
-                long timeStamp = System.currentTimeMillis() / 1000;
-                CompletableFuture.runAsync(() ->
-                        redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY, timeStamp, processedString),
-                        asyncExecutor);
-            } else {
-//                System.out.println("调试信息：消息成功到达交换机，消息ID: " + messageId);
-                CompletableFuture.runAsync(() ->
-                        stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString),
-                        asyncExecutor);
+                // 拿到回调信息中的消息
+                CustomCorrelationData customCorrelationData = (CustomCorrelationData) correlationData;
+                // 仅记录日志 + 放入轻量级队列
+                exceptionHandler.offer(customCorrelationData);
             }
         });
 
