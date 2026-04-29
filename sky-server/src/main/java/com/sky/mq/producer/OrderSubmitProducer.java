@@ -10,10 +10,13 @@ import com.sky.vo.OrderSubmitVO;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static com.sky.constant.RabbitMQConstant.*;
@@ -25,6 +28,9 @@ public class OrderSubmitProducer {
     private RabbitTemplate rabbitmqTemplate;
     @Autowired
     private RedisTemplate<String, String> strRedisTemplate;
+    @Autowired
+    @Qualifier("orderAsyncExecutor")
+    private Executor asyncExecutor;
 
     public String sendOrderMessage(OrdersSubmitDTO orderSubmitDTO) {
         // 参数校验
@@ -80,7 +86,7 @@ public class OrderSubmitProducer {
 //                messagePostProcessor,
 //                correlationData
 //        );
-        System.out.println("消息发送成功: " + messageJson);
+//        System.out.println("消息发送成功: " + messageJson);
 
     }
 
@@ -104,7 +110,7 @@ public class OrderSubmitProducer {
                 messagePostProcessor,
                 correlationData
         );
-        System.out.println("消息发送成功: " + messageJson);
+//        System.out.println("消息发送成功: " + messageJson);
     }
 
     private void saveResultToCache(String taskId) {
@@ -114,6 +120,8 @@ public class OrderSubmitProducer {
                 .build();
         Result<OrderSubmitVO> result = Result.needPoll(orderSubmitVO);
         String resultString = JSON.toJSONString(result);
-        strRedisTemplate.opsForValue().set(pollKey, resultString, 10, TimeUnit.MINUTES);
+        CompletableFuture.runAsync(() ->
+                strRedisTemplate.opsForValue().set(pollKey, resultString, 10, TimeUnit.MINUTES)
+        , asyncExecutor);
     }
 }

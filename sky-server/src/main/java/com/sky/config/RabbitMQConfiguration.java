@@ -15,10 +15,13 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static com.sky.constant.RabbitMQConstant.*;
@@ -56,7 +59,7 @@ public class RabbitMQConfiguration {
     @Bean
     public Queue orderQueue() {
         return QueueBuilder.durable(ORDER_QUEUE)
-                .withArgument("x-message-ttl", 60000)
+                .withArgument("x-message-ttl", 600000)
                 .withArgument("x-dead-letter-exchange", DEAD_LETTER_EXCHANGE)
                 .withArgument("x-dead-letter-routing-key", DEAD_LETTER_ROUTING_KEY)
                 .build();
@@ -97,7 +100,8 @@ public class RabbitMQConfiguration {
                                          MqReturnedMessageMapper mqReturnedMessageMapper,
                                          OrderService orderService,
                                          RedisTool redisTool,
-                                         StringRedisTemplate stringRedisTemplate) {
+                                         StringRedisTemplate stringRedisTemplate,
+                                         @Qualifier("orderAsyncExecutor")Executor asyncExecutor) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
@@ -111,12 +115,16 @@ public class RabbitMQConfiguration {
             ordersSubmitBakDTO.setUserId(userId);
             String processedString = JSON.toJSONString(ordersSubmitBakDTO);
             if (!ack) {
-                System.err.println("调试信息，消息发送到交换机失败：消息ID: " + messageId + "\n失败原因: " + cause);
+//                System.err.println("调试信息，消息发送到交换机失败：消息ID: " + messageId + "\n失败原因: " + cause);
                 long timeStamp = System.currentTimeMillis() / 1000;
-                redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY, timeStamp, processedString);
+                CompletableFuture.runAsync(() ->
+                        redisTool.ZaddNx(EXCEPTION_MESSAGE_KEY, timeStamp, processedString),
+                        asyncExecutor);
             } else {
 //                System.out.println("调试信息：消息成功到达交换机，消息ID: " + messageId);
-                stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString);
+                CompletableFuture.runAsync(() ->
+                        stringRedisTemplate.opsForZSet().remove(EXCEPTION_MESSAGE_KEY, processedString),
+                        asyncExecutor);
             }
         });
 
@@ -125,7 +133,9 @@ public class RabbitMQConfiguration {
             String messageId = returnedMessage.getMessage().getMessageProperties().getMessageId();
             String jsonString = new String(returnedMessage.getMessage().getBody());
             OrdersSubmitDTO ordersSubmitDTO = JSON.parseObject(jsonString, OrdersSubmitDTO.class);
-            orderService.restoreCacheStock(ordersSubmitDTO.getCartItems());
+            CompletableFuture.runAsync(() ->
+                    orderService.restoreCacheStock(ordersSubmitDTO.getCartItems()),
+                    asyncExecutor);
 
             // 消息存储到数据库中
             MqReturnedMessage mqReturnedMessage = MqReturnedMessage.builder()
@@ -136,12 +146,17 @@ public class RabbitMQConfiguration {
                     .replyText(returnedMessage.getReplyText())
                     .messageBody(new String(returnedMessage.getMessage().getBody()))
                     .build();
-            mqReturnedMessageMapper.insert(mqReturnedMessage);
+            CompletableFuture.runAsync(() ->
+                    mqReturnedMessageMapper.insert(mqReturnedMessage),
+                    asyncExecutor);
 
             // 返回下单失败
             String resultKey = ORDER_TASK_RESULT_PREFIX_KEY + messageId;
-            jsonString = JSON.toJSONString(Result.error("下单失败，请重试"));
-            stringRedisTemplate.opsForValue().set(resultKey, jsonString, 10, TimeUnit.MINUTES);
+            String string = JSON.toJSONString(Result.error("下单失败，请重试"));
+            CompletableFuture.runAsync(() ->
+                    stringRedisTemplate.opsForValue().set(resultKey, string, 10, TimeUnit.MINUTES),
+                    asyncExecutor);
+
         });
 
         rabbitTemplate.setMandatory(true);
