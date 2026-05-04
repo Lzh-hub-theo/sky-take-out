@@ -1,0 +1,68 @@
+<mxfile host="www.iodraw.com" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0" version="24.7.17">
+  <diagram id="Sd0PjEpMwrVeeASxOjCM" name="第 1 页">
+    <mxGraphModel dx="1453" dy="-2745" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="6Xyb9ZZBPAOIGLMoWIo6-10" target="6Xyb9ZZBPAOIGLMoWIo6-12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-10" value="producer" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="69" y="4080" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-12" value="" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="399" y="4030" width="360" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="6Xyb9ZZBPAOIGLMoWIo6-15" target="6Xyb9ZZBPAOIGLMoWIo6-17" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="6Xyb9ZZBPAOIGLMoWIo6-15" target="6Xyb9ZZBPAOIGLMoWIo6-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="486" y="4020" />
+              <mxPoint x="129" y="4020" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-15" value="exchange" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="446" y="4070" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="6Xyb9ZZBPAOIGLMoWIo6-17" target="6Xyb9ZZBPAOIGLMoWIo6-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="649" y="3930" />
+              <mxPoint x="129" y="3930" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-17" value="queue" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="589" y="4080" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-20" value="rabbitmq" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="539" y="4030" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="6Xyb9ZZBPAOIGLMoWIo6-22" target="6Xyb9ZZBPAOIGLMoWIo6-10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-22" value="springTask" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="69" y="4220" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-26" value="发消息&lt;div&gt;messageId&lt;/div&gt;&lt;div&gt;userId&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="229" y="4050" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-27" value="发送失败放入zset缓存中，设置不存在才新增&lt;div&gt;messageId&lt;/div&gt;&lt;div&gt;userId&lt;/div&gt;&lt;div&gt;score -&amp;gt; timestamp&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="139" y="3955" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-28" value="交换机无法路由到队列，将消息存储到数据库中&lt;div&gt;便于排查程序问题&lt;/div&gt;&lt;div&gt;最终一致性原则：重新恢复库存，返回下单失败&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="239" y="3870" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-29" value="往zset中查缓存&lt;div&gt;如果已经过了3分钟，写入数据库，删消息，恢复库存&lt;br&gt;&lt;div&gt;如果没过3分钟，重新发送消息&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="179" y="4220" width="310" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6Xyb9ZZBPAOIGLMoWIo6-30" value="传递DTO" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="289" y="4050" width="70" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
