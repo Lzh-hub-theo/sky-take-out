@@ -9,7 +9,6 @@ import com.sky.mq.correlation.CustomCorrelationData;
 import com.sky.properties.RabbitMQProperties;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
-import com.sky.tools.RedisTool;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -25,7 +24,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static com.sky.constant.RabbitMQConstant.*;
-import static com.sky.constant.RedisKeyConstant.EXCEPTION_MESSAGE_KEY;
 import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
 
 @Configuration

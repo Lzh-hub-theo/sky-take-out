@@ -1,29 +1,14 @@
 package com.sky.task;
 
-import com.alibaba.fastjson.JSON;
-import com.sky.dto.CartItemDTO;
-import com.sky.dto.OrdersSubmitBakDTO;
-import com.sky.dto.OrdersSubmitDTO;
-import com.sky.entity.MqReturnedMessage;
 import com.sky.entity.Orders;
-import com.sky.mapper.MqReturnedMessageMapper;
+import com.sky.handler.MessageExceptionHandler;
 import com.sky.mapper.OrderMapper;
-import com.sky.mq.producer.OrderSubmitProducer;
-import com.sky.result.Result;
-import com.sky.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.statement.select.KSQLWindow;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static com.sky.constant.RedisKeyConstant.EXCEPTION_MESSAGE_KEY;
 import static com.sky.constant.RedisKeyConstant.ORDER_TASK_RESULT_PREFIX_KEY;
@@ -35,13 +20,7 @@ public class OrderTask {
     @Autowired
     private OrderMapper orderMapper;
     @Autowired
-    private RedisTemplate<String, String> stringRedisTemplate;
-    @Autowired
-    private OrderSubmitProducer orderSubmitProducer;
-    @Autowired
-    private OrderService orderService;
-    @Autowired
-    private MqReturnedMessageMapper mqReturnedMessageMapper;
+    private MessageExceptionHandler messageExceptionHandler;
 
     /**
      * 处理超时订单
@@ -75,6 +54,11 @@ public class OrderTask {
         orders.setStatus(Orders.COMPLETED);
 
         orderMapper.updateByStatusAndOrderTimeLT(orders, Orders.DELIVERY_IN_PROGRESS, time);
+    }
+
+    @Scheduled(fixedRate = 5000, initialDelay = 5000)
+    public void doScheduledTask(){
+        messageExceptionHandler.startBatchPersistence();
     }
 
 //    @Scheduled(cron = "0 0/1 * * * ?")

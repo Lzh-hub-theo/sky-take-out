@@ -39,7 +39,7 @@ public class OrderController {
     @PostMapping("/submit")
     @ApiOperation("用户下单")
     public Result<String> submit(@RequestBody OrdersSubmitDTO ordersSubmitDTO) {
-        log.info("用户下单:{}", ordersSubmitDTO);
+//        log.info("用户下单:{}", ordersSubmitDTO);
         String taskId = orderService.processOrders(ordersSubmitDTO);
         return Result.needPoll(taskId);
     }
