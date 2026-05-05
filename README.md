@@ -1,5 +1,10 @@
 # Dash Foods 外卖点餐系统
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7.3-brightgreen)
+![Vue](https://img.shields.io/badge/Vue-3.5.17-brightgreen)
+![Java](https://img.shields.io/badge/Java-17-orange)
+
 ## 项目概述
 
 Dash Foods 是一个完整的外卖点餐解决方案，基于现代化的技术栈构建，包含后端API服务、商家Web管理端和用户微信小程序端。系统实现了从用户下单、支付、商家接单到配送完成的完整外卖业务流程。
